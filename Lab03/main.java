@@ -152,7 +152,7 @@ class Main
     }
 
     protected static void pwd(String[] cmd) {
-        System.out.println("Path: " + wd.getPath() + " Files/Folders: " + wd.list().length);
+        System.out.println(wd.getPath() + "\t" + wd.list().length + " files");
     }
 
     protected static void hello(String[] cmd) {
