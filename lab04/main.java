@@ -65,7 +65,7 @@ class Main {
     private static void load(String[] cmd) {
         File file;
         if (cmd.length < 2) {
-            file = new File("sorok.sor");
+            file = new File("lab04\sorok.sor");
         } else {
             file = new File(cmd[1]);
         }
