@@ -1,3 +1,5 @@
+package lab03;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,10 +51,17 @@ class Main
                     wc(cmd);
                     break;
 
+                case "grep":
+                    grep(cmd);
+                    break;
+
                 case "exit":
                     input.close();
                     exit(cmd);
                     break;
+
+                default:
+                    System.out.println("Nincs ilyen parancs!");
             }
         }
     }
@@ -68,8 +77,12 @@ class Main
         if (cmd.length < 3) return;
         File oldFile = new File(wd, cmd[1]);
         File newFile = new File(wd, cmd[2]);
-        if (oldFile.renameTo(newFile))
+        if (oldFile.renameTo(newFile)) {
+            System.out.println("megy");
+        }
+        else {
             System.out.println("Valami hiba történt átnevezés közben!");
+        }
     }
 
     protected static void cat(String[] cmd) {
@@ -149,6 +162,38 @@ class Main
             }
         }
         
+    }
+
+    protected static void grep(String[] cmd) {
+        if (cmd.length < 3) return;
+
+        String input = null;
+
+        File file = new File(wd, input);
+        if (!file.exists())
+            System.out.println("A file nem létezik!");
+        
+        Scanner inputScanner = new Scanner(System.in);
+        try {
+            inputScanner = new Scanner(file);    
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        while (inputScanner.hasNextLine()) {
+            String line = inputScanner.nextLine();
+            String[] split = line.split(" ");
+            
+            for (String string : split) {
+                if (string.matches(cmd[1])) {
+                    System.out.println(line);
+                    break;
+                }
+            }
+        }
+
+        inputScanner.close();
     }
 
     protected static void pwd(String[] cmd) {
