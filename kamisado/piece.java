@@ -1,14 +1,35 @@
 package kamisado;
 
-class Piece {
-    Positon positon;
-    ColorEnum color;
-    TeamEnum team;
+import java.io.Serializable;
+
+class Piece implements Serializable {
+    private Positon positon;
+    private ColorEnum color;
+    private TeamEnum team;
 
     int dragonTeeth; // TODO dragonTeeth implementation
 
-    boolean move(int x, int y) {
-        // move if possible, its not possible if tile is occupied
-        return false;
+    public void setTeam(TeamEnum team) {
+        this.team = team;
+    }
+
+    public TeamEnum getTeam() {
+        return team;
+    }
+
+    public void setColor(ColorEnum color) {
+        this.color = color;
+    }
+
+    public ColorEnum getColor() {
+        return color;
+    }
+
+    public void setPositon(Positon positon) {
+        this.positon = positon;
+    }
+
+    public Positon getPositon() {
+        return positon;
     }
 }

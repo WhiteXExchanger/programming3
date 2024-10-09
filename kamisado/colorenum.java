@@ -1,5 +1,5 @@
 package kamisado;
 
 enum ColorEnum {
-    ORANGE, RED, GREEN, PINK, YELLOW, BLUE, PURPLE, BROWN
+    WHITE, ORANGE, RED, GREEN, PINK, YELLOW, BLUE, PURPLE, BROWN, MOVEABLE;
 }
