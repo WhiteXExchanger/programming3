@@ -23,7 +23,7 @@ class Tile implements Serializable {
         isOccupied = !isOccupied;
     }
 
-    public boolean getOccupation() {
+    public boolean isOccupied() {
         return isOccupied;
     }
 }

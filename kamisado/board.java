@@ -2,13 +2,13 @@ package kamisado;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 
 class Board implements Serializable {
     private Tile[][] tileMatrix;
     private Piece[] blackPieces;
     private Piece[] whitePieces;
     private boolean isPlayerFirst;
-
 
     Board(boolean isPlayerFirst) {
         this.isPlayerFirst = isPlayerFirst;
@@ -58,49 +58,108 @@ class Board implements Serializable {
 
     void placeBlack(int lineIndex) {
         int index = 0;
-        for (Piece piece : blackPieces) {
-            piece.setTeam(TeamEnum.BLACK);
-            piece.setColor(tileMatrix[lineIndex][index].getColor());
-            piece.setPositon(new Positon(lineIndex, index));
+        for (int i = 0; i < blackPieces.length; i++) {
+            blackPieces[i] = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][index].getColor());
+            blackPieces[i].setPositon(new Positon(lineIndex, index));
             index++;
         }
     }
 
     void placeWhite(int lineIndex) {
         int index = 0;
-        for (Piece piece : whitePieces) {
-            piece.setTeam(TeamEnum.WHITE);
-            piece.setColor(tileMatrix[lineIndex][index].getColor());
-            piece.setPositon(new Positon(lineIndex, index));
+        for (int i = 0; i < whitePieces.length; i++) {
+            whitePieces[i] = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][index].getColor());
+            whitePieces[i].setPositon(new Positon(lineIndex, index));
             index++;
         }
     }
 
-    Piece[] getPieces() {
-        Piece[] pieces = new Piece[16];
-        for (int i = 0; i < pieces.length; i++) {
-            pieces[i] = blackPieces[i];
-            pieces[i+8] = whitePieces[i];
-        }
+    ArrayList<Piece> getPieces() {
+        ArrayList<Piece> pieces = new ArrayList<>();
+        Collections.addAll(pieces, blackPieces);
+        Collections.addAll(pieces, whitePieces);
         return pieces;
     }
 
-    ArrayList<Tile> getTilesToGo(Positon positon) {
+    ArrayList<Positon> getPositonsToGo(Positon positon) {
         Piece piece = searchForPiece(positon);
 
         if (piece.getTeam() == TeamEnum.BLACK) {
-            return searchTiles(positon, isPlayerFirst);
+            return searchForPositons(positon, isPlayerFirst);
         } else {
-            return searchTiles(positon, !isPlayerFirst);
+            return searchForPositons(positon, !isPlayerFirst);
         }
     }
 
-    ArrayList<Tile> searchTiles(Positon positon, boolean upWard) {
-        ArrayList<Tile> tiles = new ArrayList<>();
-        int x = positon.getX(), y = positon.getY();
-        while (x >= 0 && y ) {
-            
+    ArrayList<Positon> searchForPositons(Positon positon, boolean searchUpward) {
+        ArrayList<Positon> positons = new ArrayList<>();
+        int x = positon.getX();
+        int y = positon.getY();
+
+        if (searchUpward) {
+            int i = 1;
+            while (x-i > 0 && y-i > 0) {
+                if (!tileMatrix[y-i][x-i].isOccupied()) {
+                    positons.add(new Positon(x-i, y-i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            i = 1;
+            while (y-i > 0) {
+                if (!tileMatrix[y-i][x].isOccupied()) {
+                    positons.add(new Positon(x, y-i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            i = 1;
+            while (y-i > 0 && x+i < 7) {
+                if (!tileMatrix[y-i][x+i].isOccupied()) {
+                    positons.add(new Positon(x+i, y-i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+        } else {
+            int i = 1;
+            while (x+i < 7 && y+i < 7) {
+                if (!tileMatrix[y+i][x+i].isOccupied()) {
+                    positons.add(new Positon(x+i, y+i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            i = 1;
+            while (y+i < 7) {
+                if (!tileMatrix[y+i][x].isOccupied()) {
+                    positons.add(new Positon(x, y+i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            i = 1;
+            while (y+i < 7 && x-i > 0) {
+                if (!tileMatrix[y+i][x-i].isOccupied()) {
+                    positons.add(new Positon(x-i, y+i));
+                } else {
+                    break;
+                }
+                i++;
+            }
         }
+
+        return positons;
     }
 
     Piece searchForPiece(Positon positon) {

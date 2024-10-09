@@ -6,19 +6,30 @@ class Piece implements Serializable {
     private Positon positon;
     private ColorEnum color;
     private TeamEnum team;
-
     int dragonTeeth; // TODO dragonTeeth implementation
 
-    public void setTeam(TeamEnum team) {
+    Piece() {
+        this.color = ColorEnum.WHITE;
+    }
+
+    Piece(TeamEnum team, ColorEnum color) {
         this.team = team;
+        this.color = color;
+        this.dragonTeeth = 0;
+    }
+
+    Piece(TeamEnum team, ColorEnum color, int dragonTeeth) {
+        this.team = team;
+        this.color = color;
+        this.dragonTeeth = dragonTeeth;
+    }
+
+    public int getDragonTeeth() {
+        return dragonTeeth;
     }
 
     public TeamEnum getTeam() {
         return team;
-    }
-
-    public void setColor(ColorEnum color) {
-        this.color = color;
     }
 
     public ColorEnum getColor() {
