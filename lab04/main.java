@@ -22,44 +22,22 @@ class Main {
             String[] cmd = reader.nextLine().split(" ");
         
             switch (cmd[0]) {
-                case "add":
-                    add(cmd);
-                    break;
-
-                case "list":
-                    list(cmd);
-                    break;
-
-                case "search":
-                    search(cmd);
-                    break;
-
-                case "find":
-                    find(cmd);
-                    break;
-
-                case "delete":
-                    delete(cmd);
-                    break;
-
-                case "save":
-                    save(cmd);
-                    break;
-                
-                case "load":
-                    load(cmd);
-                    break;
-                
-                case "exit":
-                    reader.close();
-                    System.exit(0);
-                    break;
-            
-                default:
-                    System.out.println("Ismeretlen parancs: \t" + cmd[0]);
-                    break;
+                case "add" -> add(cmd);
+                case "list" -> list(cmd);
+                case "search" -> search(cmd);
+                case "find" -> find(cmd);
+                case "delete" -> delete(cmd);
+                case "save" -> save(cmd);
+                case "load" -> load(cmd);
+                case "exit" -> exit(reader);
+                default -> System.out.println("Ismeretlen parancs: \t" + cmd[0]);
             }
         }
+    }
+
+    private static void exit(Scanner reader) {
+        reader.close();
+        System.exit(0);
     }
 
     private static void load(String[] cmd) {
@@ -87,7 +65,7 @@ class Main {
     private static void save(String[] cmd) {
         File file;
         if (cmd.length < 2) {
-            file = new File("sorok.sor");
+            file = new File("lab04\sorok.sor");
         } else {
             file = new File(cmd[1]);
         }
