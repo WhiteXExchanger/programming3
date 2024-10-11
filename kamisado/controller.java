@@ -7,14 +7,16 @@ class Controller implements Serializable {
     Board board;
     boolean blacksTurn;
 
-    Controller(boolean isPlayerFirst) {
+    Controller() {
         blacksTurn = true;
-        board = new Board(isPlayerFirst);
+        board = new Board(true);
+
+        View view = new View(board);
     }
 
     public ArrayList<Piece> getPieces() {
         return board.getPieces();
     }
 
-
+    
 }

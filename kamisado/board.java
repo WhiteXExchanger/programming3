@@ -15,29 +15,30 @@ class Board implements Serializable {
         tileMatrix = new Tile[8][8];
         blackPieces = new Piece[8];
         whitePieces = new Piece[8];
-        populateTiles();
+        placeTiles();
         placePieces();
     }
     
-    void populateTiles() {
+    void placeTiles() {
+
         // ---------- www.github.com/mandriv/kamisado/blob/master/src/kamisado/logic/Board.java ----------
         int[] counters = {0, 1, 2, 3, 4, 5, 6, 7};
         for (int i = 0; i < tileMatrix.length; i++) {
-            tileMatrix[i][counters[0]].setColor(ColorEnum.ORANGE);
+            tileMatrix[i][counters[0]] = new Tile(ColorEnum.ORANGE);
             counters[0] = (counters[0] + 1) % 8;
-            tileMatrix[i][counters[1]].setColor(ColorEnum.BLUE);
+            tileMatrix[i][counters[1]] = new Tile(ColorEnum.BLUE);
             counters[1] = (counters[1] + 11) % 8;
-            tileMatrix[i][counters[2]].setColor(ColorEnum.PURPLE);
+            tileMatrix[i][counters[2]] = new Tile(ColorEnum.PURPLE);
             counters[2] = (counters[2] + 5) % 8;
-            tileMatrix[i][counters[3]].setColor(ColorEnum.PINK);
+            tileMatrix[i][counters[3]] = new Tile(ColorEnum.PINK);
             counters[3] = (counters[3] + 7) % 8;
-            tileMatrix[i][counters[4]].setColor(ColorEnum.YELLOW);
+            tileMatrix[i][counters[4]] = new Tile(ColorEnum.YELLOW);
             counters[4] = (counters[4] + 1) % 8;
-            tileMatrix[i][counters[5]].setColor(ColorEnum.RED);
+            tileMatrix[i][counters[5]] = new Tile(ColorEnum.RED);
             counters[5] = (counters[5] + 3) % 8;
-            tileMatrix[i][counters[6]].setColor(ColorEnum.GREEN);
+            tileMatrix[i][counters[6]] = new Tile(ColorEnum.GREEN);
             counters[6] = (counters[6] + 5) % 8;
-            tileMatrix[i][counters[7]].setColor(ColorEnum.BROWN);
+            tileMatrix[i][counters[7]] = new Tile(ColorEnum.BROWN);
             counters[7] = (counters[7] + 7) % 8;
         }
         // -----------------------------------------------------------------------------------------------
@@ -74,24 +75,28 @@ class Board implements Serializable {
         }
     }
 
-    ArrayList<Piece> getPieces() {
+    public ArrayList<Piece> getPieces() {
         ArrayList<Piece> pieces = new ArrayList<>();
         Collections.addAll(pieces, blackPieces);
         Collections.addAll(pieces, whitePieces);
         return pieces;
     }
 
+    public Tile[][] getTileMatrix() {
+        return tileMatrix;
+    }
+
     ArrayList<Positon> getPositonsToGo(Positon positon) {
         Piece piece = searchForPiece(positon);
 
         if (piece.getTeam() == TeamEnum.BLACK) {
-            return searchForPositons(positon, isPlayerFirst);
+            return getPossiblePositons(positon, isPlayerFirst);
         } else {
-            return searchForPositons(positon, !isPlayerFirst);
+            return getPossiblePositons(positon, !isPlayerFirst);
         }
     }
 
-    ArrayList<Positon> searchForPositons(Positon positon, boolean searchUpward) {
+    public ArrayList<Positon> getPossiblePositons(Positon positon, boolean searchUpward) {
         ArrayList<Positon> positons = new ArrayList<>();
         int x = positon.getX();
         int y = positon.getY();

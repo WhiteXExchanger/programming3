@@ -3,12 +3,12 @@ package kamisado;
 import java.io.Serializable;
 
 class Tile implements Serializable {
-    ColorEnum color;
-    boolean isOccupied;
+    private ColorEnum color;
+    private boolean isOccupied;
 
-    Tile() {
+    Tile(ColorEnum color) {
         isOccupied = false;
-        color = ColorEnum.WHITE;
+        this.color = color;
     }
 
     public void setColor(ColorEnum color) {
