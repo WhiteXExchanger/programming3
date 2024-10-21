@@ -3,13 +3,21 @@ package kamisado;
 import java.io.Serializable;
 
 class Piece implements Serializable {
-    private Positon positon;
     private ColorEnum color;
     private TeamEnum team;
-    int dragonTeeth; // TODO dragonTeeth implementation
+    private int dragonTeeth;
 
     Piece() {
         this.color = ColorEnum.WHITE;
+    }
+
+    Piece(Piece other) {
+        this.color = other.getColor();
+        this.team = other.getTeam();
+    }
+
+    public String toString() {
+        return "color: " + this.color;
     }
 
     Piece(TeamEnum team, ColorEnum color) {
@@ -24,8 +32,16 @@ class Piece implements Serializable {
         this.dragonTeeth = dragonTeeth;
     }
 
+    public int getMovementLength() {
+        return 7-dragonTeeth*2;
+    }
+
     public int getDragonTeeth() {
         return dragonTeeth;
+    }
+
+    public void increaseDragonTeeth() {
+        if (dragonTeeth<3) dragonTeeth++;
     }
 
     public TeamEnum getTeam() {
@@ -34,13 +50,5 @@ class Piece implements Serializable {
 
     public ColorEnum getColor() {
         return color;
-    }
-
-    public void setPositon(Positon positon) {
-        this.positon = positon;
-    }
-
-    public Positon getPositon() {
-        return positon;
     }
 }

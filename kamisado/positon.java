@@ -5,13 +5,17 @@ import java.io.Serializable;
 /**
  * positon
  */
-class Positon implements Serializable {
-    int x;
-    int y;
+class Position implements Serializable {
+    private int x;
+    private int y;
 
-    Positon(int x, int y) {
+    Position(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+
+    public String toString() {
+        return "x:" + this.x + " y:" + this.y;
     }
 
     public void setX(int x) {

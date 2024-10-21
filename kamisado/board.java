@@ -1,20 +1,14 @@
 package kamisado;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 
 class Board implements Serializable {
     private Tile[][] tileMatrix;
-    private Piece[] blackPieces;
-    private Piece[] whitePieces;
-    private boolean isPlayerFirst;
+    private TeamEnum actualPlayer;
 
-    Board(boolean isPlayerFirst) {
-        this.isPlayerFirst = isPlayerFirst;
+    Board(boolean isBottomBlack) {
+        actualPlayer = isBottomBlack ? TeamEnum.BLACK : TeamEnum.WHITE; // if this is false -> ai is present
         tileMatrix = new Tile[8][8];
-        blackPieces = new Piece[8];
-        whitePieces = new Piece[8];
         placeTiles();
         placePieces();
     }
@@ -48,138 +42,156 @@ class Board implements Serializable {
         int topIndex = 0;
         int bottomIndex = 7;
 
-        if (isPlayerFirst) {
-            placeWhite(topIndex);
-            placeBlack(bottomIndex);
-        } else {
-            placeBlack(topIndex);
-            placeWhite(bottomIndex);
+        switch (actualPlayer) {
+            case WHITE -> {
+                placeBlack(topIndex);
+                placeWhite(bottomIndex);
+            }
+            case BLACK -> {
+                placeWhite(topIndex);
+                placeBlack(bottomIndex);
+            }
         }
     }
 
     void placeBlack(int lineIndex) {
-        int index = 0;
-        for (int i = 0; i < blackPieces.length; i++) {
-            blackPieces[i] = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][index].getColor());
-            blackPieces[i].setPositon(new Positon(lineIndex, index));
-            index++;
+        for (int i = 0; i < tileMatrix.length; i++) {
+            Piece piece = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][i].getColor());
+            tileMatrix[lineIndex][i].setPiece(piece);
         }
     }
 
     void placeWhite(int lineIndex) {
-        int index = 0;
-        for (int i = 0; i < whitePieces.length; i++) {
-            whitePieces[i] = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][index].getColor());
-            whitePieces[i].setPositon(new Positon(lineIndex, index));
-            index++;
+        for (int i = 0; i < tileMatrix.length; i++) {
+            Piece piece = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][i].getColor());
+            tileMatrix[lineIndex][i].setPiece(piece);
         }
     }
 
-    public ArrayList<Piece> getPieces() {
-        ArrayList<Piece> pieces = new ArrayList<>();
-        Collections.addAll(pieces, blackPieces);
-        Collections.addAll(pieces, whitePieces);
-        return pieces;
+    public void changeActivePlayer() {
+        if (actualPlayer == TeamEnum.BLACK)
+            actualPlayer = TeamEnum.WHITE;
+        else 
+            actualPlayer = TeamEnum.BLACK;
+        unflagBoard();
+    }
+
+    public void unflagBoard() {
+        for (Tile[] tiles : tileMatrix) {
+            for (Tile tile : tiles) {
+                tile.unflag();
+            }
+        }
     }
 
     public Tile[][] getTileMatrix() {
         return tileMatrix;
     }
 
-    ArrayList<Positon> getPositonsToGo(Positon positon) {
-        Piece piece = searchForPiece(positon);
-
-        if (piece.getTeam() == TeamEnum.BLACK) {
-            return getPossiblePositons(positon, isPlayerFirst);
-        } else {
-            return getPossiblePositons(positon, !isPlayerFirst);
-        }
-    }
-
-    public ArrayList<Positon> getPossiblePositons(Positon positon, boolean searchUpward) {
-        ArrayList<Positon> positons = new ArrayList<>();
-        int x = positon.getX();
-        int y = positon.getY();
-
-        if (searchUpward) {
-            int i = 1;
-            while (x-i > 0 && y-i > 0) {
-                if (!tileMatrix[y-i][x-i].isOccupied()) {
-                    positons.add(new Positon(x-i, y-i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-            i = 1;
-            while (y-i > 0) {
-                if (!tileMatrix[y-i][x].isOccupied()) {
-                    positons.add(new Positon(x, y-i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-            i = 1;
-            while (y-i > 0 && x+i < 7) {
-                if (!tileMatrix[y-i][x+i].isOccupied()) {
-                    positons.add(new Positon(x+i, y-i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-        } else {
-            int i = 1;
-            while (x+i < 7 && y+i < 7) {
-                if (!tileMatrix[y+i][x+i].isOccupied()) {
-                    positons.add(new Positon(x+i, y+i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-            i = 1;
-            while (y+i < 7) {
-                if (!tileMatrix[y+i][x].isOccupied()) {
-                    positons.add(new Positon(x, y+i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-
-            i = 1;
-            while (y+i < 7 && x-i > 0) {
-                if (!tileMatrix[y+i][x-i].isOccupied()) {
-                    positons.add(new Positon(x-i, y+i));
-                } else {
-                    break;
-                }
-                i++;
-            }
-        }
-
-        return positons;
-    }
-
-    Piece searchForPiece(Positon positon) {
-        for (Piece piece : blackPieces) {
-            if (piece.getPositon() == positon) {
-                return piece;
-            }
-        }
-        for (Piece piece : whitePieces) {
-            if (piece.getPositon() == positon) {
-                return piece;
-            }
-        }
-
-        return new Piece();
+    public boolean isOccupied(Position positon) {
+        return tileMatrix[positon.getY()][positon.getX()].isOccupied();
     }
     
+    public boolean movePiece(Position from, Position to) {
+        Piece piece = tileMatrix[from.getY()][from.getX()].getPiece();
+        if (piece == null) return false;
+        Tile tile = tileMatrix[to.getY()][to.getX()];
+        
+        System.out.println(from);
+        System.out.println(to);
+        if (tile.isFlagged()) {
+            int x = from.getX();
+            int y = from.getY();
+            tile.setPiece(new Piece(piece));
+            tileMatrix[y][x].clearPiece();
+            System.out.println("moved");
+            return true;
+        }
+        System.out.println("stand still");
+        return false;
+    }
+
+    public Position getNextPiecePosition(Position actualPostion) {
+        ColorEnum nextColor = tileMatrix[actualPostion.getY()][actualPostion.getX()].getColor();
+        
+        for (int i = 0; i < tileMatrix.length; i++) {
+            for (int j = 0; j < tileMatrix.length; j++) {
+                Piece piece = tileMatrix[i][j].getPiece();
+                if (piece == null) continue;
+                if (piece.getTeam() == actualPlayer && piece.getColor() == nextColor) {
+                    return new Position(j, i);
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean flagTiles(Position position) {
+        int length = tileMatrix[position.getY()][position.getX()].getPiece().getMovementLength();
+        int x = position.getX();
+        int y = position.getY();
+        int direction = 0; // -1 for downward, 1 for upward
+        if (actualPlayer == TeamEnum.BLACK)
+            direction = 1;
+        else
+            direction = -1;
+    
+        int tileCounter = 0;
+        // Diagonal (right)
+        for (int i = 1; x + i * direction < 8 && y - i * direction < 8
+        && x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x + direction * i];
+            if (tile.isOccupied()) break;
+            tile.flag();
+            tileCounter++;
+        }
+    
+        // Vertical
+        for (int i = 1; y - i * direction < 8 && y - i * direction >= 0
+        && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x];
+            if (tile.isOccupied()) break; 
+            tile.flag();
+            tileCounter++;
+        }
+    
+        // Diagonal (left)
+        for (int i = 1; x - i * direction < 8 && y - i * direction < 8
+        && x - i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x - direction * i];
+            if (tile.isOccupied()) break; 
+            tile.flag();
+            tileCounter++;
+        }
+
+        return (tileCounter > 0);
+        
+        /*  debug
+        for ( Tile[] tiles : tileMatrix) {
+            for (int i = 0; i < tiles.length; i++) {
+                System.out.print(tiles[i].isFlagged() + "\t");
+            }
+            System.out.println("");
+        } */
+    }
+
+    public boolean isSameTeam(Position from, Position to) {
+        if (from == null || to == null) return false;
+        Piece piece = tileMatrix[from.getY()][from.getX()].getPiece();
+        Piece otherPiece = tileMatrix[to.getY()][to.getY()].getPiece();
+        return (piece != null && otherPiece != null && piece.getTeam() == otherPiece.getTeam());
+    }
+
+    public int isGameOver(Position to) {
+        if (actualPlayer == TeamEnum.BLACK && to.getY() == 0) {
+            tileMatrix[to.getY()][to.getX()].getPiece().increaseDragonTeeth();
+            return 1;
+        }
+        else if (actualPlayer == TeamEnum.WHITE && to.getY() == 7) {
+            tileMatrix[to.getY()][to.getX()].getPiece().increaseDragonTeeth();
+            return -1;
+        }
+        return 0;
+    }
+
 }
