@@ -1,6 +1,5 @@
 package lab05;
 
-
 /**
  * command
  */

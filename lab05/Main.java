@@ -38,7 +38,7 @@ public class Main {
 
 
         
-        while (isRunning) {
+        while (Boolean.TRUE.equals(isRunning)) {
             String[] cmd = reader.nextLine().split(" ");
         
             if (commands.get(cmd[0]) == null) {
@@ -101,10 +101,11 @@ public class Main {
         }
 
         try {
-            Serializable serializable = new ArrayList(beers);
+            ArrayList<Beer> list = new ArrayList<>();
+            list.addAll(beers);
             FileOutputStream stream = new FileOutputStream(file);
             ObjectOutputStream output = new ObjectOutputStream(stream);
-            output.writeObject(serializable);
+            output.writeObject(list);
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
