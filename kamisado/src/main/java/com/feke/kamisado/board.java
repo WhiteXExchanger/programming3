@@ -1,4 +1,4 @@
-package kamisado;
+package com.feke.kamisado;
 
 import java.io.Serializable;
 
@@ -127,7 +127,11 @@ class Board implements Serializable {
     }
 
     public boolean flagTiles(Position position) {
-        int length = tileMatrix[position.getY()][position.getX()].getPiece().getMovementLength();
+        Tile startingTile = tileMatrix[position.getY()][position.getX()];
+        Piece piece = startingTile.getPiece();
+        if (piece == null) return false;
+        startingTile.select();
+        int length = piece.getMovementLength();
         int x = position.getX();
         int y = position.getY();
         int direction = 0; // -1 for downward, 1 for upward
@@ -165,21 +169,6 @@ class Board implements Serializable {
         }
 
         return (tileCounter > 0);
-        
-        /*  debug
-        for ( Tile[] tiles : tileMatrix) {
-            for (int i = 0; i < tiles.length; i++) {
-                System.out.print(tiles[i].isFlagged() + "\t");
-            }
-            System.out.println("");
-        } */
-    }
-
-    public boolean isSameTeam(Position from, Position to) {
-        if (from == null || to == null) return false;
-        Piece piece = tileMatrix[from.getY()][from.getX()].getPiece();
-        Piece otherPiece = tileMatrix[to.getY()][to.getY()].getPiece();
-        return (piece != null && otherPiece != null && piece.getTeam() == otherPiece.getTeam());
     }
 
     public int isGameOver(Position to) {
@@ -194,4 +183,10 @@ class Board implements Serializable {
         return 0;
     }
 
+    public boolean isOncomingPlayer(Position to) {
+        if(to == null) return false;
+        Piece piece = tileMatrix[to.getY()][to.getX()].getPiece();
+        if (piece == null) return false;
+        return piece.getTeam() == actualPlayer;
+    }
 }

@@ -1,11 +1,11 @@
-package kamisado;
+package com.feke.kamisado;
 
 import java.io.Serializable;
 
 class Tile implements Serializable {
     private ColorEnum color;
     private boolean isOccupied;
-    private boolean isFlagged;
+    private TileEnum tileEnum;
     private Piece piece;
 
     Tile(ColorEnum color) {
@@ -31,16 +31,24 @@ class Tile implements Serializable {
         this.isOccupied = true;
     }
 
+    public void select() {
+        tileEnum = TileEnum.SELECTED;
+    }
+
     public void flag() {
-        isFlagged = true;
+        tileEnum = TileEnum.FLAGGED;
     }
 
     public void unflag() {
-        isFlagged = false;
+        tileEnum = TileEnum.NONE;
+    }
+
+    public boolean isSelected() {
+        return tileEnum == TileEnum.SELECTED;
     }
 
     public boolean isFlagged() {
-        return isFlagged;
+        return tileEnum == TileEnum.FLAGGED;
     }
 
     public Piece getPiece() {

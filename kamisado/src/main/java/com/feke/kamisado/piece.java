@@ -1,4 +1,4 @@
-package kamisado;
+package com.feke.kamisado;
 
 import java.io.Serializable;
 

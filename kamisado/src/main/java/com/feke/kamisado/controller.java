@@ -1,4 +1,4 @@
-package kamisado;
+package com.feke.kamisado;
 
 class Controller {
     Board board;
@@ -24,15 +24,11 @@ class Controller {
     }
 
     void touchTile(Position to) {
-        if (from == null) {
-            from = to;
-            board.flagTiles(to);
-        } else if (board.isSameTeam(from, to) && isFirstMove) {
+        if (board.isOncomingPlayer(to) && isFirstMove) {
             board.unflagBoard();
             from = to;
             board.flagTiles(from);
-        } 
-        else {
+        } else if (board.isOncomingPlayer(from)) {
             if (!board.movePiece(from, to)) return;
             if(whoWon(board.isGameOver(to))) {
                 startGame(isBottomBlack);
