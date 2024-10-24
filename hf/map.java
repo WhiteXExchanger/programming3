@@ -53,8 +53,7 @@ class Map {
 
                 for (int k = -1; k < 2; k++) {
                     int zPosition = z + k;
-                    if(zPosition < 0 || zPosition > mineMap.length) continue;
-                    if(i == 0 && j == 0 && k == 0) continue;
+                    if(zPosition < 0 || zPosition > mineMap.length || i == 0 && j == 0 && k == 0) continue;
 
                     neighbours.add(mineMap[xPositon][yPositon][zPosition]); // add each neighbour in a 3x3x3 cube
                 }
@@ -142,7 +141,5 @@ class Map {
         } else {
             // YOU WIN
         }
-        countCorrectlyGuessedMines();
-        // TODO Auto-generated method stub
     }
 }

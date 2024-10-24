@@ -17,7 +17,7 @@ class Piece implements Serializable {
     }
 
     public String toString() {
-        return "color: " + this.color;
+        return "team : " + this.team + "\tcolor: " + this.color + "\tteeth: " + this.dragonTeeth;
     }
 
     Piece(TeamEnum team, ColorEnum color) {

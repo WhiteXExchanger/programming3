@@ -2,10 +2,16 @@ package com.feke.kamisado;
 
 import java.io.IOException;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
@@ -14,8 +20,8 @@ import javax.swing.*;
 
 class View {
     private final JFrame frame;
-    private final JPanel panel;
     private final Controller controller;
+    private JPanel panel;
 
     private ClassLoader classLoader;
     private Image blueBlack;
@@ -35,6 +41,14 @@ class View {
     private Image yellowBlack;
     private Image yellowWhite;
 
+    
+    private Image black1Sumo;
+    private Image black2Sumo;
+    private Image black3Sumo;
+    private Image white1Sumo;
+    private Image white2Sumo;
+    private Image white3Sumo;
+
     private Image selectedTile;
     private Image flaggedTile;
 
@@ -45,32 +59,101 @@ class View {
 
         classLoader = getClass().getClassLoader();
         imageLoader();
-        
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        panel.setBackground(Color.BLACK);
-        panel.setLayout(new GridLayout(8,8,2,2));
+        setupPanel();
         
         frame.setTitle("Kamisado");
-        frame.setMinimumSize(new Dimension(450, 450));
+        frame.setMinimumSize(new Dimension(410, 410));
         frame.setLayout(new GridLayout(0,1));
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         frame.setContentPane(panel);
         frame.pack();
         frame.setVisible(true);
+        frame.setFocusable(true);
+        frame.requestFocusInWindow();
+
+        frame.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) { /* do noting */ }
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_Q || e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    renderMenu();
+                }
+            }
+            @Override
+            public void keyReleased(KeyEvent e) { /* do noting */ }
+        });
     }
 
     public void renderGame(Tile[][] tiles) {
-        panel.removeAll();
+        frame.getContentPane().removeAll();
+        setupPanel();
 
+        panel.setLayout(new GridLayout(8,8,2,2));
         renderTiles(tiles);
 
-        panel.setVisible(true);
-        frame.revalidate();
+        panel.revalidate();
     }
 
     public void renderMenu() {
-        return;
+        frame.getContentPane().removeAll();
+        setupPanel();
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        // Create buttons
+        JButton playerVsPlayer = new JButton("Player vs Player");
+        JButton playerVsBot = new JButton("Player vs Bot");
+        JButton quit = new JButton("Quit");
+
+        playerVsPlayer.setAlignmentX(Component.CENTER_ALIGNMENT);
+        playerVsBot.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quit.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        playerVsPlayer.addActionListener(e -> renderGameOptions(false));
+        playerVsBot.addActionListener(e -> renderGameOptions(true));
+        quit.addActionListener(e -> exit());
+
+        // Add buttons to the panel
+        panel.add(playerVsPlayer);
+        panel.add(Box.createRigidArea(new Dimension(0, 10))); // Space between buttons
+        panel.add(playerVsBot);
+        panel.add(Box.createRigidArea(new Dimension(0, 10))); // Space between buttons
+        panel.add(quit);
+
+        // Set the frame to be visible
+        panel.revalidate();
+    }
+
+    public void renderGameOptions(boolean isBotPlaying) {
+        panel.removeAll();
+        setupPanel();
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        // Create buttons
+        JButton normalMode = new JButton("Normal mode");
+        JButton quickMode = new JButton("Quick mode");
+        JButton back = new JButton("Back");
+
+        normalMode.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quickMode.setAlignmentX(Component.CENTER_ALIGNMENT);
+        back.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        normalMode.addActionListener(e -> controller.startGame(true, isBotPlaying));
+        quickMode.addActionListener(e -> controller.startGame(false, isBotPlaying));
+        back.addActionListener(e -> renderMenu());
+
+        // Add buttons to the panel
+        panel.add(normalMode);
+        panel.add(Box.createRigidArea(new Dimension(0, 10))); // Space between buttons
+        panel.add(quickMode);
+        panel.add(Box.createRigidArea(new Dimension(0, 10))); // Space between buttons
+        panel.add(back);
+
+        // Set the frame to be visible
+        panel.revalidate();
     }
 
     private void renderTiles(Tile[][] tiles) {
@@ -114,6 +197,9 @@ class View {
         BufferedImage combinedImage = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = combinedImage.createGraphics();
         g.drawImage(background, 0, 0, null);
+        if (piece.getDragonTeeth() != 0) {
+            g.drawImage(getImage(piece.getTeam(), piece.getDragonTeeth()), 0, 0, null);
+        }
         if (tile.isSelected())
             g.drawImage(selectedTile, 0, 0, null);
         g.dispose();
@@ -163,6 +249,37 @@ class View {
             }
         }
     }
+
+    private Image getImage(TeamEnum team, int teeth) {
+        if (team == TeamEnum.BLACK) {
+            switch (teeth) {
+                case 1 -> { return black1Sumo; }
+                case 2 -> { return black2Sumo; }
+                case 3 -> { return black3Sumo; }
+                default -> { return new BufferedImage(0, 0, 0, null); }
+            }
+        } else {
+            switch (teeth) {
+                case 1 -> { return white1Sumo; }
+                case 2 -> { return white2Sumo; }
+                case 3 -> { return white3Sumo; }
+                default -> { return new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB); }
+            }
+        }
+    }
+
+    private void setupPanel() {
+        panel = new JPanel();
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBackground(Color.BLACK);
+        frame.add(panel);
+        frame.setContentPane(panel);
+        frame.pack();
+    }
+
+    private void exit() {                                  
+        frame.dispose();
+    }
     
     private void imageLoader() {
         try {
@@ -184,6 +301,12 @@ class View {
             yellowWhite = ImageIO.read(classLoader.getResourceAsStream("pieces/yellowTower_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
             flaggedTile = ImageIO.read(classLoader.getResourceAsStream("tile_overlays/possibleTileOverlay.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
             selectedTile = ImageIO.read(classLoader.getResourceAsStream("tile_overlays/focusedTileOverlay.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            black1Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo1_black.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            black2Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo2_black.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            black3Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo3_black.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            white1Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo1_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            white2Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo2_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            white3Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo3_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
         } catch (IOException e) {
             e.printStackTrace(); // Handle exceptions
         }

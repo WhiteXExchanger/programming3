@@ -1,4 +1,4 @@
-package lab05;
+package lab_05;
 
 /**
  * command

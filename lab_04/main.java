@@ -1,65 +1,46 @@
-package lab05;
+package lab_04;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 
-public class Main {
-    private static Boolean isRunning = true;
-    private static List<Beer> beers = new ArrayList<Beer>();
-    private static Map<String, Command> commands = new HashMap<>();
-    private static Map<String, Comparator<Beer>> comps = new HashMap<String,Comparator<Beer>>();
-    private static ArrayList<String> lparams = new ArrayList<>();
-    
-    static {
-        lparams.add("name");
-        lparams.add("style");
-        lparams.add("strength");
-        commands.put("add", Main::add);
-        commands.put("list", Main::list);
-        commands.put("search", Main::search);
-        commands.put("find", Main::find);
-        commands.put("delete", Main::delete);
-        commands.put("load", Main::load);
-        commands.put("save", Main::save);
-
-        comps.put("name",
-            (b1,b2) -> b1.getName().compareTo(b2.getName())
-        );
-        comps.put("style",
-            (b1,b2) -> b1.getStyle().compareTo(b2.getStyle())
-        );
-        comps.put("strength",
-            (b1,b2) -> b1.getStrength().compareTo(b2.getStrength())
-        );
-    }
-
+class Main {
+    private static List<Beer> beers = new ArrayList<>();
     public static void main(String[] args) {
         Scanner reader = new Scanner(System.in);
-
-
         
-        while (Boolean.TRUE.equals(isRunning)) {
+        while (true) {
             String[] cmd = reader.nextLine().split(" ");
         
-            if (commands.get(cmd[0]) == null) {
-                if (cmd[0].compareTo("exit") == 0) {
-                    exit();
-                } else {
-                    System.out.println("Ismeretlen parancs: \t" + cmd[0]);
-                }
-            } else {
-                commands.get(cmd[0]).execute(cmd);
+            switch (cmd[0]) {
+                case "add" -> add(cmd);
+                case "list" -> list(cmd);
+                case "search" -> search(cmd);
+                case "find" -> find(cmd);
+                case "delete" -> delete(cmd);
+                case "save" -> save(cmd);
+                case "load" -> load(cmd);
+                case "exit" -> exit(reader);
+                default -> System.out.println("Ismeretlen parancs: \t" + cmd[0]);
             }
         }
+    }
 
+    private static void exit(Scanner reader) {
         reader.close();
         System.exit(0);
     }
 
-    private static void exit() {
-        isRunning = false;
-    }
-
+    @SuppressWarnings("unchecked")
     private static void load(String[] cmd) {
         File file;
         if (cmd.length < 2) {
@@ -76,7 +57,11 @@ public class Main {
         try {
             FileInputStream stream = new FileInputStream(file);
             ObjectInputStream input = new ObjectInputStream(stream);
-            beers = (ArrayList<Beer>) input.readObject();
+            Object obj = input.readObject();
+            if (obj instanceof ArrayList<?>) {
+                beers = (ArrayList<Beer>) input.readObject();
+            }
+            input.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,11 +86,10 @@ public class Main {
         }
 
         try {
-            ArrayList<Beer> list = new ArrayList<>();
-            list.addAll(beers);
+            Serializable serializable = new ArrayList<>(beers);
             FileOutputStream stream = new FileOutputStream(file);
             ObjectOutputStream output = new ObjectOutputStream(stream);
-            output.writeObject(list);
+            output.writeObject(serializable);
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,30 +101,28 @@ public class Main {
         beers.add(new Beer(cmd[1],cmd[2],Double.valueOf(cmd[3])));
     }
 
-    private static void modifyList(String name) {
-        if (lparams.contains(name)) {
-            lparams.remove(name); // Töröljük a megadott nevet
+    private static Comparator<Beer> sortBy(String type) {
+        if (type.compareTo("name") == 0) {
+            return new SortByName();
+        } else if (type.compareTo("style") == 0) {
+            return new SortByStyle();
+        } else if (type.compareTo("strength") == 0) {
+            return new SortByStrength();
+        } else {
+            return new SortByName();
         }
-        lparams.add(0, name); // Helyezzük a lista elejére
     }
 
     private static void list(String[] cmd) {
-
-        if (cmd.length == 2) {
-            modifyList(cmd[1]);
-        } else { 
-            System.out.println("Undefined behaviour!");
-            return;
-        }
-
-        Collections.sort(beers,
-        new CComparator<>(
-            comps.get(lparams.get(0)),
-            comps.get(lparams.get(1))
-        ).then(comps.get(lparams.get(2))));
-
-        for (Beer beer : beers) {
-            System.out.println(beer);
+        if (cmd.length < 2) {
+            for (Beer beer : beers) {
+                System.out.println(beer);
+            }
+        } else {
+            Collections.sort(beers, sortBy(cmd[1]));
+            for (Beer beer : beers) {
+                System.out.println(beer);
+            }
         }
     }
 

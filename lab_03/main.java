@@ -1,4 +1,4 @@
-package lab03;
+package lab_03;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -1,73 +1,66 @@
 package com.feke.kamisado;
 
+import java.util.logging.Logger;
+
 class Controller {
+    private static final Logger logger = Logger.getLogger(Controller.class.getName());
+
     Board board;
     View view;
     Position from = null;
-    int[] points = {0, 0};
     boolean isFirstMove = true;
-    boolean isBottomBlack;
+    boolean isBotPlaying = false;
+    int pointsNeeded = 1;
 
     Controller() {
         view = new View(this);
-        ViewEnum viewEnum = ViewEnum.gameView; // getting from outside
-
-        switch (viewEnum) {
-            case gameView -> {
-                isBottomBlack = true; // getting from outside
-                startGame(isBottomBlack); // if this is false -> ai is present
-                updateGame();
-            }
-        
-            case menuView -> loadMenu();
-        }
+        view.renderMenu();
     }
 
     void touchTile(Position to) {
         if (board.isOncomingPlayer(to) && isFirstMove) {
-            board.unflagBoard();
             from = to;
-            board.flagTiles(from);
-        } else if (board.isOncomingPlayer(from)) {
-            if (!board.movePiece(from, to)) return;
-            if(whoWon(board.isGameOver(to))) {
-                startGame(isBottomBlack);
-            }
-            board.changeActivePlayer();
+            board.selectTile(from);
+        } else if (board.isOncomingPlayer(from) && board.move(from, to)) {
             isFirstMove = false;
-            from = board.getNextPiecePosition(to);
-            while (!board.flagTiles(from)) {
-                board.changeActivePlayer();
-                from = board.getNextPiecePosition(from);
-                board.flagTiles(from);
+            if(board.isTurnOver()) {
+                if(isGameOver()) {
+                    view.renderMenu();
+                    return;
+                }
+                isFirstMove = true;
+                from = null;
+                updateGame();
+                return;
             }
+            
+            from = board.getNextPiecePosition(to);
         }
         updateGame();
     }
-
-    private boolean whoWon(int gameOver) {
-        if (gameOver == 1) {
-            System.out.println("Black won");
-            points[0]++;
+    
+    private boolean isGameOver() {
+        int[] points = board.getPoints();
+        if (points[0] == pointsNeeded) {
+            logger.info("Black won");
             return true;
-        } else if (gameOver == -1) {
-            System.out.println("White won");
-            points[1]++;
+        } else if (points[1] == pointsNeeded) {
+            logger.info("White won");
             return true;
         }
         return false;
     }
-
-    private void loadMenu() {
-        view.renderMenu();
-    }
-
-    void startGame(boolean isBottomBlack) {
+    
+    public void startGame(boolean isNormalMode, boolean isBotPlaying) {
+        board = new Board(isNormalMode);
+        this.isBotPlaying = isBotPlaying;
+        pointsNeeded = isNormalMode ? 15 : 1;
+        isFirstMove = true;
         from = null;
-        board = new Board(isBottomBlack);
+        updateGame();
     }
 
-    void updateGame() {
-        view.renderGame(board.getTileMatrix());
+    private void updateGame() {
+        view.renderGame(board.getMap());
     }
 }

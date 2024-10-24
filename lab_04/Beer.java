@@ -1,4 +1,4 @@
-package lab04;
+package lab_04;
 
 import java.io.Serializable;
 import java.util.Comparator;
