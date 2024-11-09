@@ -1,18 +1,20 @@
 package com.feke.kamisado;
 
-import java.util.logging.Logger;
+import java.io.Serializable;
 
-public class Map {
-    private static final Logger logger = Logger.getLogger(Controller.class.getName());
+public class Map implements Serializable {
 
-    private Tile[][] tileMatrix;
-    private boolean orientation;
+    private Tile[][] tileMatrix = new Tile[8][8];;
+    private boolean blackOnBottom;
 
-    Map(boolean orientation) {
-        tileMatrix = new Tile[8][8];
-        this.orientation = orientation;
+    Map(boolean blackOnBottom) {
+        this.blackOnBottom = blackOnBottom;
         placeTiles();
-        placePieces(orientation);
+        placePieces();
+    }
+
+    Map(Tile[][] tileMatrix) {
+        this.tileMatrix = tileMatrix;
     }
 
     void placeTiles() {
@@ -40,11 +42,11 @@ public class Map {
         // -----------------------------------------------------------------------------------------------
     }
 
-    void placePieces(boolean orientation) {
+    private void placePieces() {
         int topIndex = 0;
         int bottomIndex = 7;
 
-        if (orientation) {
+        if (blackOnBottom) {
             placeWhite(topIndex);
             placeBlack(bottomIndex);
         } else {
@@ -53,7 +55,18 @@ public class Map {
         }
     }
 
-    void placeBlack(int lineIndex) {
+    public Coordinate getSelected() {
+        for (int i = 0; i < tileMatrix.length; i++) {
+            for (int j = 0; j < tileMatrix.length; j++) {
+                if (tileMatrix[i][j].isSelected()) {
+                    return new Coordinate(j, i);
+                }
+            }
+        }
+        return null;
+    }
+
+    private void placeBlack(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][i].getColor());
             tileMatrix[lineIndex][i].setPiece(piece);
@@ -64,46 +77,40 @@ public class Map {
         return tileMatrix;
     }
 
-    void placeWhite(int lineIndex) {
+    private void placeWhite(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][i].getColor());
             tileMatrix[lineIndex][i].setPiece(piece);
         }
     }
 
-    public boolean moveOnMap(Position position, Position nextPosition) {
-        Piece piece = tileMatrix[position.getY()][position.getX()].getPiece();
+    public boolean move(Coordinate coordinate, Coordinate nextCoordinate) {
+        Piece piece = tileMatrix[coordinate.getY()][coordinate.getX()].getPiece();
         if (piece == null) return false;
-        Tile tile = tileMatrix[nextPosition.getY()][nextPosition.getX()];
+        Tile tile = tileMatrix[nextCoordinate.getY()][nextCoordinate.getX()];
         
-        System.out.println(position);
-        System.out.println(nextPosition);
         if (tile.isFlagged()) {
-            int x = position.getX();
-            int y = position.getY();
+            int x = coordinate.getX();
+            int y = coordinate.getY();
             tile.setPiece(piece);
             tileMatrix[y][x].clearPiece();
-            System.out.println("moved");
             return true;
         }
-        System.out.println("stand still");
         return false;
     }
 
-    public void ended(Position position, boolean orientation) {
-        this.orientation = orientation;
+    public void ended(Coordinate position, boolean orientation) {
         tileMatrix[position.getY()][position.getX()].getPiece().increaseDragonTeeth();
-        resetTiles(orientation);
+        resetTiles();
     }
 
-    private void resetTiles(boolean orientation) {
+    private void resetTiles() {
         Piece[] pieces = getAllPieces();
         placeTiles();
-        placePieces(orientation);
+        placePieces();
         for (Tile tile : tileMatrix[0]) {
             for (Piece piece : pieces) {
                 if (isSamePiece(tile.getPiece(), piece)) {
-                    logger.info(""+piece);
                     tile.setPiece(piece);
                 }
             }
@@ -111,7 +118,6 @@ public class Map {
         for (Tile tile : tileMatrix[7]) {
             for (Piece piece : pieces) {
                 if (isSamePiece(tile.getPiece(), piece)) {
-                    logger.info(""+piece);
                     tile.setPiece(piece);
                 }
             }
@@ -137,7 +143,7 @@ public class Map {
         return pieces;
     }
 
-    public boolean flagTiles(Position position, boolean isFirstPlayer) {
+    public boolean flagTiles(Coordinate position, boolean isFirstPlayer) {
         Tile startingTile = tileMatrix[position.getY()][position.getX()];
         Piece piece = startingTile.getPiece();
         if (piece == null) return false;
@@ -186,11 +192,11 @@ public class Map {
         }
     }
 
-    public Piece getPiece(Position pos) {
+    public Piece getPiece(Coordinate pos) {
         return tileMatrix[pos.getY()][pos.getX()].getPiece();
     }
 
-    public ColorEnum getColor(Position pos) {
+    public ColorEnum getColor(Coordinate pos) {
         return tileMatrix[pos.getY()][pos.getX()].getColor();
     }
 }

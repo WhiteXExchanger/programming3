@@ -1,22 +1,23 @@
 package com.feke.kamisado;
 
 import java.io.Serializable;
-import java.util.logging.Logger;
 
 class Board implements Serializable {
-    private static final Logger logger = Logger.getLogger(Controller.class.getName());
 
-    private Map map;
-    private TeamEnum activePlayer;
-    private boolean orientation;
-    private boolean isTurnOver;
+    private Map map = new Map(true);
+    private TeamEnum activePlayer = TeamEnum.BLACK;
+    private boolean isTurnOver = false; // TODO REMOVE THIS LATER
+    private boolean blackOnBottom = true;
     private int[] points = {0, 0};
 
-    Board(boolean isBottomBlack) {
-        activePlayer = isBottomBlack ? TeamEnum.BLACK : TeamEnum.WHITE; // if this is false -> ai is present
-        map = new Map(isBottomBlack);
-        orientation = isBottomBlack;
-        isTurnOver = false;
+    private boolean isBotPlaying;
+
+    Board(boolean isBotPlaying) {
+        this.isBotPlaying = isBotPlaying;
+    }
+
+    public int[] getPoints() {
+        return points;
     }
 
     public void changeActivePlayer() {
@@ -24,8 +25,11 @@ class Board implements Serializable {
             activePlayer = TeamEnum.WHITE;
         else 
             activePlayer = TeamEnum.BLACK;
-        
-        logger.info("actualPlayer changed: " + activePlayer);
+        map.unflagTiles();
+    }
+
+    public void changeActivePlayer(TeamEnum team) {
+        activePlayer = team;
         map.unflagTiles();
     }
 
@@ -33,42 +37,23 @@ class Board implements Serializable {
         return map.getMap();
     }
     
-    public boolean move(Position position, Position nextPosition) {
-        boolean canMove = map.moveOnMap(position, nextPosition);
+    public boolean move(Coordinate position, Coordinate nextPosition) {
+        boolean canMove = map.move(position, nextPosition);
         if (canMove) {
-            isTurnOver = isEndingMove(nextPosition);
+            if (nextPosition.getY() == 0 || nextPosition.getY() == 7) {
+                isTurnOver = true;
+                increasePoints(nextPosition);
+            }
             changeActivePlayer();
-            return true;
         }
-        return false;
+        return canMove;
     }
 
-    boolean isEndingMove(Position position) {
-        boolean isThereAWinner = false;
-        if (orientation) {
-            if (activePlayer == TeamEnum.BLACK && position.getY() == 0) {
-                orientation = !orientation;
-                isThereAWinner = true;
-            } else if (activePlayer == TeamEnum.WHITE && position.getY() == 7) {
-                isThereAWinner = true;
-            }
-        } else {
-            if (activePlayer == TeamEnum.BLACK && position.getY() == 7) {
-                isThereAWinner = true;
-            } else if (activePlayer == TeamEnum.WHITE && position.getY() == 0) {
-                orientation = !orientation;
-                isThereAWinner = true;
-            }
-        }
-        if (isThereAWinner) {
-            increasePoints(position);
-            map.ended(position, orientation);
-            logger.info("black points: " + points[0] + " white points: " + points[1]);
-        }
-        return isThereAWinner;
+    public Coordinate getSelected() {
+        return map.getSelected();
     }
 
-    private void increasePoints(Position position) {
+    private void increasePoints(Coordinate position) {
         Piece piece = map.getPiece(position);
         if (piece.getTeam() == TeamEnum.BLACK) {
             points[0] += piece.getDragonTeeth() + 1;
@@ -77,11 +62,7 @@ class Board implements Serializable {
         }
     }
 
-    public int[] getPoints() {
-        return points;
-    }
-
-    public Position getNextPiecePosition(Position positon) {
+    public Coordinate getNextPiecePosition(Coordinate positon) {
         ColorEnum color = map.getColor(positon);
         
         positon = getPositonByColor(color);
@@ -93,34 +74,31 @@ class Board implements Serializable {
         return positon;
     }
 
-    private Position getPositonByColor(ColorEnum color) {
+    private Coordinate getPositonByColor(ColorEnum color) {
         Tile[][] tileMatrix = map.getMap();
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
                 Piece piece = tileMatrix[i][j].getPiece();
                 if (piece == null) continue;
                 if (piece.getTeam() == activePlayer && piece.getColor() == color) {
-                    return new Position(j, i);
+                    return new Coordinate(j, i);
                 }
             }
         }
         return null;
     }
 
-    public boolean selectTile(Position position) {
+    public boolean selectTile(Coordinate position) {
         map.unflagTiles();
-        if (activePlayer == TeamEnum.BLACK && orientation || activePlayer == TeamEnum.WHITE && !orientation) {
-            return map.flagTiles(position, true);
-        } else {
-            return map.flagTiles(position, false);
-        }
+        return map.flagTiles(position, activePlayer == TeamEnum.BLACK &&  blackOnBottom 
+                                    || activePlayer == TeamEnum.WHITE && !blackOnBottom);
     }
 
     public boolean isTurnOver() {
         return isTurnOver;
     }
 
-    public boolean isOncomingPlayer(Position position) {
+    public boolean isOncomingPlayer(Coordinate position) {
         if(position == null) return false;
         Piece piece = map.getPiece(position);
         if (piece == null) return false;

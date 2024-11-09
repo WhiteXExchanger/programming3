@@ -13,6 +13,13 @@ class Tile implements Serializable {
         this.color = color;
     }
 
+    Tile(Tile tile) {
+        this.color = tile.color;
+        this.isOccupied = tile.isOccupied;
+        this.tileEnum = tile.tileEnum;
+        this.piece = tile.piece;
+    }
+
     public void setColor(ColorEnum color) {
         this.color = color;
     }

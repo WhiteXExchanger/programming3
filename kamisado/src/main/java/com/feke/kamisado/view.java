@@ -3,13 +3,10 @@ package com.feke.kamisado;
 import java.io.IOException;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
@@ -63,6 +60,7 @@ class View {
         
         frame.setTitle("Kamisado");
         frame.setMinimumSize(new Dimension(410, 410));
+        frame.setResizable(false);
         frame.setLayout(new GridLayout(0,1));
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -78,6 +76,7 @@ class View {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_Q || e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    controller.save();
                     renderMenu();
                 }
             }
@@ -90,7 +89,7 @@ class View {
         frame.getContentPane().removeAll();
         setupPanel();
 
-        panel.setLayout(new GridLayout(8,8,2,2));
+        panel.setLayout(new GridLayout(8,8,1,1));
         renderTiles(tiles);
 
         panel.revalidate();
@@ -170,10 +169,9 @@ class View {
             
             ImageIcon icon = getPiecedTileGraphics(tile);
             JButton button = new JButton(icon);
-            button.addActionListener(e -> controller.touchTile(new Position(x, y)));
+            button.addActionListener(e -> controller.touchTile(new Coordinate(x, y)));
             
             button.setBackground(getColor(tile.getColor()));
-            button.setBorder(BorderFactory.createBevelBorder(1, Color.LIGHT_GRAY, Color.DARK_GRAY));
             panel.add(button);
         } else {
             ImageIcon icon = new ImageIcon();
@@ -182,9 +180,8 @@ class View {
             }
             
             JButton button = new JButton(icon);
-            button.addActionListener(e -> controller.touchTile(new Position(x, y)));
+            button.addActionListener(e -> controller.touchTile(new Coordinate(x, y)));
             button.setBackground(getColor(tile.getColor()));
-            button.setBorder(BorderFactory.createBevelBorder(1, Color.LIGHT_GRAY, Color.DARK_GRAY));
             panel.add(button);
         }
     }

@@ -2,14 +2,11 @@ package com.feke.kamisado;
 
 import java.io.Serializable;
 
-/**
- * positon
- */
-class Position implements Serializable {
+class Coordinate implements Serializable {
     private int x;
     private int y;
 
-    Position(int x, int y) {
+    Coordinate(int x, int y) {
         this.x = x;
         this.y = y;
     }
