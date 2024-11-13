@@ -143,7 +143,35 @@ public class Map implements Serializable {
         return pieces;
     }
 
-    public boolean flagTiles(Coordinate position, boolean isFirstPlayer) {
+    private Coordinate getPositonByColor(ColorEnum color) {
+        Tile[][] tileMatrix = map.getMap();
+        for (int i = 0; i < tileMatrix.length; i++) {
+            for (int j = 0; j < tileMatrix.length; j++) {
+                Piece piece = tileMatrix[i][j].getPiece();
+                if (piece == null) continue;
+                if (piece.getTeam() == activePlayer && piece.getColor() == color) {
+                    return new Coordinate(j, i);
+                }
+            }
+        }
+        return null;
+    }
+
+    public Coordinate getNextPiecePosition(Coordinate positon) {
+        ColorEnum color = getColor(positon);
+        
+        positon = getPositonByColor(color);
+        while (!selectTile(positon)) {
+            changeActivePlayer();
+            positon = getPositonByColor(getColor(positon));
+        }
+        
+        return positon;
+    }
+
+    public boolean flagTiles(Coordinate position) {
+        this.unflagTiles();
+
         Tile startingTile = tileMatrix[position.getY()][position.getX()];
         Piece piece = startingTile.getPiece();
         if (piece == null) return false;
@@ -151,7 +179,7 @@ public class Map implements Serializable {
         int length = piece.getMovementLength();
         int x = position.getX();
         int y = position.getY();
-        int direction = isFirstPlayer ? 1 : -1; // -1 for downward, 1 for upward
+        int direction = blackOnBottom ? 1 : -1; // -1 for downward, 1 for upward
     
         int tileCounter = 0;
         // Diagonal (right)

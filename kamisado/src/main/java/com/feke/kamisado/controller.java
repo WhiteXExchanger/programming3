@@ -4,17 +4,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.logging.Logger;
 
-class Controller {
-    private static final Logger logger = Logger.getLogger(Controller.class.getName());
-    private static final Ai ai = new Ai();
+public class Controller {
 
     Board board;
     View view;
-    Coordinate from = null;
-    boolean isFirstMove = true;
-    boolean isBotPlaying = false;
     int pointsNeeded = 1;
 
     Controller() {
@@ -24,38 +18,12 @@ class Controller {
     }
 
     void touchTile(Coordinate to) {
-        if (board.isOncomingPlayer(to) && isFirstMove) {
-            from = to;
-            board.selectTile(from);
-        } else if (board.isOncomingPlayer(from) && board.move(from, to)) {
-            isFirstMove = false;
-            if(board.isTurnOver()) {
-                if (isGameOver()) return;
-                isFirstMove = true;
-                from = null;
-                updateGame();
-                return;
-            }
-            
-            from = board.getNextPiecePosition(to);
-            if (isBotPlaying && board.getMap()[from.getY()][from.getX()].getPiece().getTeam() == TeamEnum.WHITE) {
-                to = ai.getBestMove(from, board.getMap());
-                if (board.move(from, to)) {
-                    from = board.getNextPiecePosition(to);
-                    if(board.isTurnOver()) {
-                        if (isGameOver()) {
-                            return;
-                        }
-                        board.changeActivePlayer(TeamEnum.BLACK);
-                        isFirstMove = true;
-                        from = null;
-                        updateGame();
-                        return;
-                    }
-                }
-            }
+        if (!isGameOver()) {
+            board.tryMoving(to);
+            updateGame();
+        } else {
+            view.renderMenu();
         }
-        updateGame();
     }
 
     public void save() {
@@ -85,25 +53,17 @@ class Controller {
     }
     
     private boolean isGameOver() {
-        boolean isGameOver = false;
         int[] points = board.getPoints();
-        if (points[0] == pointsNeeded) {
-            logger.info("Black won");
-            isGameOver = true;
-        } else if (points[1] == pointsNeeded) {
-            logger.info("White won");
-            isGameOver = true;
+        if (points[0] == pointsNeeded || points[1] == pointsNeeded) {
+            view.renderMenu();
+            return true;
         }
-        if (isGameOver) view.renderMenu();
-        return isGameOver;
+        return false;
     }
     
     public void startGame(boolean isNormalMode, boolean isBotPlaying) {
         board = new Board(isBotPlaying);
-        this.isBotPlaying = isBotPlaying;
         pointsNeeded = isNormalMode ? 15 : 1;
-        isFirstMove = true;
-        from = null;
         updateGame();
     }
 

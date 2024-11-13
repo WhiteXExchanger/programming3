@@ -2,18 +2,46 @@ package com.feke.kamisado;
 
 import java.io.Serializable;
 
-class Board implements Serializable {
+public class Board implements Serializable {
 
-    private Map map = new Map(true);
+    private static final Ai ai = new Ai();
+    private Map map;
     private TeamEnum activePlayer = TeamEnum.BLACK;
-    private boolean isTurnOver = false; // TODO REMOVE THIS LATER
-    private boolean blackOnBottom = true;
+    private Coordinate activeCoordinate = null;
+    private boolean isBotPlaying = false;
+    private boolean isFirstMove = true;
     private int[] points = {0, 0};
 
-    private boolean isBotPlaying;
-
     Board(boolean isBotPlaying) {
+        this.map = new Map(isBotPlaying);
         this.isBotPlaying = isBotPlaying;
+    }
+
+    public void tryMoving(Coordinate to) {
+        if (isOncomingPlayer(activeCoordinate) && isFirstMove) {
+            activeCoordinate = to;
+            selectTile(activeCoordinate);
+        } else if (isOncomingPlayer(activeCoordinate) && move(activeCoordinate, to)) {
+            isFirstMove = false;
+            if(isTurnOver()) {
+                isFirstMove = true;
+                activeCoordinate = null;
+                return;
+            }
+        
+            activeCoordinate = map.getNextPiecePosition(to);
+            if (isBotPlaying && map.getPiece(activeCoordinate).getTeam() == TeamEnum.WHITE) {
+                to = ai.getBestMove(activeCoordinate, getMap());
+                if (move(activeCoordinate, to)) {
+                    activeCoordinate = map.getNextPiecePosition(to);
+                    if(isTurnOver()) {
+                        changeActivePlayer(TeamEnum.BLACK);
+                        isFirstMove = true;
+                        activeCoordinate = null;
+                    }
+                }
+            }
+        }
     }
 
     public int[] getPoints() {
@@ -41,8 +69,8 @@ class Board implements Serializable {
         boolean canMove = map.move(position, nextPosition);
         if (canMove) {
             if (nextPosition.getY() == 0 || nextPosition.getY() == 7) {
-                isTurnOver = true;
                 increasePoints(nextPosition);
+                isTurnOver = true; // reset needed
             }
             changeActivePlayer();
         }
@@ -62,40 +90,8 @@ class Board implements Serializable {
         }
     }
 
-    public Coordinate getNextPiecePosition(Coordinate positon) {
-        ColorEnum color = map.getColor(positon);
-        
-        positon = getPositonByColor(color);
-        while (!selectTile(positon)) {
-            changeActivePlayer();
-            positon = getPositonByColor(map.getColor(positon));
-        }
-        
-        return positon;
-    }
-
-    private Coordinate getPositonByColor(ColorEnum color) {
-        Tile[][] tileMatrix = map.getMap();
-        for (int i = 0; i < tileMatrix.length; i++) {
-            for (int j = 0; j < tileMatrix.length; j++) {
-                Piece piece = tileMatrix[i][j].getPiece();
-                if (piece == null) continue;
-                if (piece.getTeam() == activePlayer && piece.getColor() == color) {
-                    return new Coordinate(j, i);
-                }
-            }
-        }
-        return null;
-    }
-
     public boolean selectTile(Coordinate position) {
-        map.unflagTiles();
-        return map.flagTiles(position, activePlayer == TeamEnum.BLACK &&  blackOnBottom 
-                                    || activePlayer == TeamEnum.WHITE && !blackOnBottom);
-    }
-
-    public boolean isTurnOver() {
-        return isTurnOver;
+        return map.flagTiles(position);
     }
 
     public boolean isOncomingPlayer(Coordinate position) {
