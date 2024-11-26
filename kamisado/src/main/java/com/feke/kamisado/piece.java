@@ -7,10 +7,6 @@ class Piece implements Serializable {
     private TeamEnum team;
     private int dragonTeeth;
 
-    Piece() {
-        this.color = ColorEnum.WHITE;
-    }
-
     Piece(Piece other) {
         this.color = other.getColor();
         this.team = other.getTeam();
@@ -24,12 +20,6 @@ class Piece implements Serializable {
         this.team = team;
         this.color = color;
         this.dragonTeeth = 0;
-    }
-
-    Piece(TeamEnum team, ColorEnum color, int dragonTeeth) {
-        this.team = team;
-        this.color = color;
-        this.dragonTeeth = dragonTeeth;
     }
 
     public int getMovementLength() {

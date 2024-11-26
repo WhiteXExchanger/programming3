@@ -49,9 +49,8 @@ public class Position {
 
     private int calculateEvaluationForPiecePosition(int modifier, Coordinate coord) {
         int value = 0;
-        Piece piece = simulatedMap.getPiece(coord);
         if (inEndingPosition(coord)) 
-            value += 150 * modifier * piece.getDragonTeeth()+1;
+            value += 150 * modifier * simulatedMap.getDragonTeeth(coord) + 1;
         if (inEndingMovePosition(coord))
             value += 30 * modifier;
         if (blockingEnemyPiece(coord))
@@ -68,15 +67,15 @@ public class Position {
     }
 
     private boolean inEndingPosition(Coordinate coord) {
-        return simulatedMap.getPiece(coord).getTeam() == TeamEnum.BLACK && coord.getY() == 0 || 
-            simulatedMap.getPiece(coord).getTeam() == TeamEnum.WHITE && coord.getY() == 7;
+        return simulatedMap.getTeam(coord) == TeamEnum.BLACK && coord.getY() == 0 || 
+            simulatedMap.getTeam(coord) == TeamEnum.WHITE && coord.getY() == 7;
     }
 
     private boolean inEndingMovePosition(Coordinate coord) {
         ArrayList<Coordinate> coords = getValidMovements(coord);
         boolean isEndingMove = false;
         boolean isWhite = false;
-        if (simulatedMap.getPiece(coord).getTeam() == TeamEnum.WHITE) {
+        if (simulatedMap.getTeam(coord) == TeamEnum.WHITE) {
             isWhite = true;
         } 
 
@@ -114,10 +113,10 @@ public class Position {
     public ArrayList<Coordinate> getValidMovements(Coordinate coord) {
         ArrayList<Coordinate> coords = new ArrayList<>();
 
-        int length = simulatedMap.getPiece(coord).getMovementLength();
+        int length = simulatedMap.getMovementLength(coord);
 
         int direction;
-        if (simulatedMap.getPiece(coord).getTeam() == TeamEnum.WHITE) {
+        if (simulatedMap.getTeam(coord) == TeamEnum.WHITE) {
             direction = -1;
         } else {
             direction = 1;
@@ -152,8 +151,8 @@ public class Position {
     }
 
     private Coordinate getNextPieceCoord(Coordinate coord) {
-        TeamEnum oposedTeam = simulatedMap.getPiece(coord).getTeam();
-        ColorEnum color = simulatedMap.getColor(coord);
+        TeamEnum oposedTeam = simulatedMap.getTeam(coord);
+        ColorEnum color = simulatedMap.getTileColor(coord);
 
         for (int i = 0; i < simulatedMap.getMap().length; i++) {
             for (int j = 0; j < simulatedMap.getMap().length; j++) {

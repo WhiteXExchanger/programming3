@@ -28,6 +28,7 @@ public class Ai {
                 index = i;
             }
         }
+        System.out.println(movements.get(index));
         return movements.get(index);
     }
 

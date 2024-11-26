@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class Board implements Serializable {
 
     private static final Ai ai = new Ai();
-    private Map map;
-    private TeamEnum activePlayer = TeamEnum.BLACK;
+    private final Map map;
+    private TeamEnum currentPlayer = TeamEnum.BLACK;
     private Coordinate activeCoordinate = null;
     private boolean isBotPlaying = false;
     private boolean isFirstMove = true;
@@ -17,31 +17,45 @@ public class Board implements Serializable {
         this.isBotPlaying = isBotPlaying;
     }
 
-    public void tryMoving(Coordinate to) {
-        if (isOncomingPlayer(activeCoordinate) && isFirstMove) {
-            activeCoordinate = to;
-            selectTile(activeCoordinate);
-        } else if (isOncomingPlayer(activeCoordinate) && move(activeCoordinate, to)) {
+    // When interacting with our piece, we change the selected piece
+    // Otherwise we try to move the piece to the incoming coordinate
+    public void interact(Coordinate coord) {
+        if (isOncomingsPiece(coord) && isFirstMove) {
+            activeCoordinate = coord;
+            map.selectTile(activeCoordinate, currentPlayer);
+
+        } else if (activeCoordinate != null && map.movePiece(activeCoordinate, coord)) {
             isFirstMove = false;
-            if(isTurnOver()) {
-                isFirstMove = true;
-                activeCoordinate = null;
+
+            if(map.isTurnOver()) {
+                endOfTurn(coord);
+                changeActivePlayer();
                 return;
             }
-        
-            activeCoordinate = map.getNextPiecePosition(to);
-            if (isBotPlaying && map.getPiece(activeCoordinate).getTeam() == TeamEnum.WHITE) {
-                to = ai.getBestMove(activeCoordinate, getMap());
-                if (move(activeCoordinate, to)) {
-                    activeCoordinate = map.getNextPiecePosition(to);
-                    if(isTurnOver()) {
-                        changeActivePlayer(TeamEnum.BLACK);
-                        isFirstMove = true;
-                        activeCoordinate = null;
-                    }
-                }
+
+            changeActivePlayer();
+            activeCoordinate = map.getNextPieceCoordinate(coord);
+
+            // Only runs if AI is present
+            if (isBotPlaying) useBot(activeCoordinate);
+        }
+    }
+
+    private void useBot(Coordinate coord) {
+        coord = ai.getBestMove(activeCoordinate, getMap());
+        if (map.movePiece(activeCoordinate, coord)) {
+            activeCoordinate = map.getNextPieceCoordinate(coord);
+            if(map.isTurnOver()) {
+                endOfTurn(coord);
+                changeActivePlayer(TeamEnum.BLACK);
             }
         }
+    }
+
+    private void endOfTurn(Coordinate coord) {
+        increasePoints(coord);
+        isFirstMove = true;
+        activeCoordinate = null;
     }
 
     public int[] getPoints() {
@@ -49,55 +63,33 @@ public class Board implements Serializable {
     }
 
     public void changeActivePlayer() {
-        if (activePlayer == TeamEnum.BLACK)
-            activePlayer = TeamEnum.WHITE;
+        if (currentPlayer == TeamEnum.BLACK)
+            currentPlayer = TeamEnum.WHITE;
         else 
-            activePlayer = TeamEnum.BLACK;
-        map.unflagTiles();
+            currentPlayer = TeamEnum.BLACK;
     }
 
-    public void changeActivePlayer(TeamEnum team) {
-        activePlayer = team;
-        map.unflagTiles();
+    private void changeActivePlayer(TeamEnum team) {
+        currentPlayer = team;
     }
 
     public Tile[][] getMap() {
         return map.getMap();
-    }
-    
-    public boolean move(Coordinate position, Coordinate nextPosition) {
-        boolean canMove = map.move(position, nextPosition);
-        if (canMove) {
-            if (nextPosition.getY() == 0 || nextPosition.getY() == 7) {
-                increasePoints(nextPosition);
-                isTurnOver = true; // reset needed
-            }
-            changeActivePlayer();
-        }
-        return canMove;
     }
 
     public Coordinate getSelected() {
         return map.getSelected();
     }
 
-    private void increasePoints(Coordinate position) {
-        Piece piece = map.getPiece(position);
-        if (piece.getTeam() == TeamEnum.BLACK) {
-            points[0] += piece.getDragonTeeth() + 1;
+    private void increasePoints(Coordinate coord) {
+        if (currentPlayer == TeamEnum.BLACK) {
+            points[0] += map.getDragonTeeth(coord) + 1;
         } else {
-            points[1] += piece.getDragonTeeth() + 1;
+            points[1] += map.getDragonTeeth(coord) + 1;
         }
     }
 
-    public boolean selectTile(Coordinate position) {
-        return map.flagTiles(position);
-    }
-
-    public boolean isOncomingPlayer(Coordinate position) {
-        if(position == null) return false;
-        Piece piece = map.getPiece(position);
-        if (piece == null) return false;
-        return piece.getTeam() == activePlayer;
+    public boolean isOncomingsPiece(Coordinate coord) {
+        return map.getTeam(coord) == currentPlayer;
     }
 }

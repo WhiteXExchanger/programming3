@@ -18,12 +18,13 @@ public class Controller {
     }
 
     void touchTile(Coordinate to) {
-        if (!isGameOver()) {
-            board.tryMoving(to);
-            updateGame();
-        } else {
+        if (isGameOver()) {
             view.renderMenu();
+        } else {
+            board.interact(to);
+            updateGame();
         }
+        updateGame();
     }
 
     public void save() {
@@ -47,7 +48,6 @@ public class Controller {
             e.printStackTrace();
         }
         if (board != null) {
-            from = board.getSelected();
             updateGame();
         }
     }

@@ -1,5 +1,5 @@
 package com.feke.kamisado;
 
 enum TeamEnum {
-    BLACK, WHITE
+    BLACK, WHITE, NONE
 }

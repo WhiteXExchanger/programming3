@@ -17,26 +17,26 @@ public class Map implements Serializable {
         this.tileMatrix = tileMatrix;
     }
 
-    void placeTiles() {
+    private void placeTiles() {
 
         // ---------- www.github.com/mandriv/kamisado/blob/master/src/kamisado/logic/Board.java ----------
         int[] counters = {0, 1, 2, 3, 4, 5, 6, 7};
-        for (int i = 0; i < tileMatrix.length; i++) {
-            tileMatrix[i][counters[0]] = new Tile(ColorEnum.ORANGE);
+        for (Tile[] rows : tileMatrix) {
+            rows[counters[0]] = new Tile(ColorEnum.ORANGE);
             counters[0] = (counters[0] + 1) % 8;
-            tileMatrix[i][counters[1]] = new Tile(ColorEnum.BLUE);
+            rows[counters[1]] = new Tile(ColorEnum.BLUE);
             counters[1] = (counters[1] + 11) % 8;
-            tileMatrix[i][counters[2]] = new Tile(ColorEnum.PURPLE);
+            rows[counters[2]] = new Tile(ColorEnum.PURPLE);
             counters[2] = (counters[2] + 5) % 8;
-            tileMatrix[i][counters[3]] = new Tile(ColorEnum.PINK);
+            rows[counters[3]] = new Tile(ColorEnum.PINK);
             counters[3] = (counters[3] + 7) % 8;
-            tileMatrix[i][counters[4]] = new Tile(ColorEnum.YELLOW);
+            rows[counters[4]] = new Tile(ColorEnum.YELLOW);
             counters[4] = (counters[4] + 1) % 8;
-            tileMatrix[i][counters[5]] = new Tile(ColorEnum.RED);
+            rows[counters[5]] = new Tile(ColorEnum.RED);
             counters[5] = (counters[5] + 3) % 8;
-            tileMatrix[i][counters[6]] = new Tile(ColorEnum.GREEN);
+            rows[counters[6]] = new Tile(ColorEnum.GREEN);
             counters[6] = (counters[6] + 5) % 8;
-            tileMatrix[i][counters[7]] = new Tile(ColorEnum.BROWN);
+            rows[counters[7]] = new Tile(ColorEnum.BROWN);
             counters[7] = (counters[7] + 7) % 8;
         }
         // -----------------------------------------------------------------------------------------------
@@ -84,30 +84,26 @@ public class Map implements Serializable {
         }
     }
 
-    public boolean move(Coordinate coordinate, Coordinate nextCoordinate) {
-        Piece piece = tileMatrix[coordinate.getY()][coordinate.getX()].getPiece();
-        if (piece == null) return false;
-        Tile tile = tileMatrix[nextCoordinate.getY()][nextCoordinate.getX()];
+    public boolean movePiece(Coordinate currCoord, Coordinate nextCoord) {
+        Tile tile = getTile(nextCoord);
+        Piece piece = getPiece(currCoord);
+        if (!tile.isFlagged() || piece == null) return false;
         
-        if (tile.isFlagged()) {
-            int x = coordinate.getX();
-            int y = coordinate.getY();
-            tile.setPiece(piece);
-            tileMatrix[y][x].clearPiece();
-            return true;
-        }
-        return false;
+        tile.setPiece(piece);
+        tileMatrix[currCoord.getY()][currCoord.getX()].clearPiece();
+        return true;
     }
 
-    public void ended(Coordinate position, boolean orientation) {
-        tileMatrix[position.getY()][position.getX()].getPiece().increaseDragonTeeth();
-        resetTiles();
+    public void selectTile(Coordinate activeCoordinate, TeamEnum currentPlayer) {
+        flagTiles(activeCoordinate, currentPlayer);
     }
 
-    private void resetTiles() {
+    private void resetMap() {
         Piece[] pieces = getAllPieces();
+        
         placeTiles();
         placePieces();
+
         for (Tile tile : tileMatrix[0]) {
             for (Piece piece : pieces) {
                 if (isSamePiece(tile.getPiece(), piece)) {
@@ -143,13 +139,12 @@ public class Map implements Serializable {
         return pieces;
     }
 
-    private Coordinate getPositonByColor(ColorEnum color) {
-        Tile[][] tileMatrix = map.getMap();
+    private Coordinate getPieceCoordinate(ColorEnum color, TeamEnum team) {
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
                 Piece piece = tileMatrix[i][j].getPiece();
-                if (piece == null) continue;
-                if (piece.getTeam() == activePlayer && piece.getColor() == color) {
+                if (piece == null) { }
+                else if (piece.getTeam() == team && piece.getColor() == color) {
                     return new Coordinate(j, i);
                 }
             }
@@ -157,19 +152,22 @@ public class Map implements Serializable {
         return null;
     }
 
-    public Coordinate getNextPiecePosition(Coordinate positon) {
-        ColorEnum color = getColor(positon);
+    public Coordinate getNextPieceCoordinate(Coordinate coord) {
+        ColorEnum color = getTileColor(coord);
+        TeamEnum team = getPiece(coord).getTeam();
         
-        positon = getPositonByColor(color);
-        while (!selectTile(positon)) {
-            changeActivePlayer();
-            positon = getPositonByColor(getColor(positon));
+        team = team == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
+        coord = getPieceCoordinate(color, team);
+        while (!flagTiles(coord, team)) {
+            team = team == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
+            color = getTileColor(coord);
+            coord = getPieceCoordinate(color, team);
         }
         
-        return positon;
+        return coord;
     }
 
-    public boolean flagTiles(Coordinate position) {
+    private boolean flagTiles(Coordinate position, TeamEnum currentPlayer) {
         this.unflagTiles();
 
         Tile startingTile = tileMatrix[position.getY()][position.getX()];
@@ -179,7 +177,12 @@ public class Map implements Serializable {
         int length = piece.getMovementLength();
         int x = position.getX();
         int y = position.getY();
-        int direction = blackOnBottom ? 1 : -1; // -1 for downward, 1 for upward
+        int direction; // -1 for downward, 1 for upward            
+        if (blackOnBottom) {
+            direction = currentPlayer == TeamEnum.BLACK ? 1 : -1;
+        } else {
+            direction = currentPlayer == TeamEnum.BLACK ? -1 : 1;
+        }
     
         int tileCounter = 0;
         // Diagonal (right)
@@ -220,11 +223,54 @@ public class Map implements Serializable {
         }
     }
 
-    public Piece getPiece(Coordinate pos) {
-        return tileMatrix[pos.getY()][pos.getX()].getPiece();
+    public boolean isTurnOver() {
+        Piece investigatedPiece;
+        TeamEnum team;
+        for (int i = 0; i < tileMatrix.length; i++) {
+            investigatedPiece = tileMatrix[0][i].getPiece();
+            if (investigatedPiece == null) continue;
+            team = investigatedPiece.getTeam();
+            if (blackOnBottom && team == TeamEnum.BLACK || !blackOnBottom && team == TeamEnum.WHITE) {
+                System.out.println("Turn over");
+                return true;
+            }
+            
+            investigatedPiece = tileMatrix[7][i].getPiece();
+            if (investigatedPiece == null) continue;
+            team = investigatedPiece.getTeam();
+            if (blackOnBottom && team == TeamEnum.WHITE || !blackOnBottom && team == TeamEnum.BLACK) {
+                System.out.println("Turn over");
+                return true;
+            }
+        }
+        return false;
     }
 
-    public ColorEnum getColor(Coordinate pos) {
-        return tileMatrix[pos.getY()][pos.getX()].getColor();
+    private Tile getTile(Coordinate coord) {
+        return tileMatrix[coord.getY()][coord.getX()];
+    }
+
+    private Piece getPiece(Coordinate coord) {
+        return tileMatrix[coord.getY()][coord.getX()].getPiece();
+    }
+
+    public int getDragonTeeth(Coordinate coord) {
+        return tileMatrix[coord.getY()][coord.getX()].getPiece().getDragonTeeth();
+    }
+
+    public int getMovementLength(Coordinate coord) {
+        return tileMatrix[coord.getY()][coord.getX()].getPiece().getMovementLength();
+    }
+
+    public TeamEnum getTeam(Coordinate coord) {
+        Piece piece = tileMatrix[coord.getY()][coord.getX()].getPiece();
+        if (piece == null) {
+            return TeamEnum.NONE;
+        }
+        return piece.getTeam();
+    }
+
+    public  ColorEnum getTileColor(Coordinate coord) {
+        return tileMatrix[coord.getY()][coord.getX()].getColor();
     }
 }
