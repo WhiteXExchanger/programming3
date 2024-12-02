@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Board implements Serializable {
 
-    private static final Ai ai = new Ai();
+    private static final Bot ai = new Bot();
     private final Map map;
     private TeamEnum currentPlayer = TeamEnum.BLACK;
     private Coordinate activeCoordinate = null;
@@ -17,79 +17,71 @@ public class Board implements Serializable {
         this.isBotPlaying = isBotPlaying;
     }
 
-    // When interacting with our piece, we change the selected piece
-    // Otherwise we try to move the piece to the incoming coordinate
+    // if we interacting with one of our piece, we change the current selected piece coordinate to the other piece coordinate
+    // otherwise we try to move the piece to this new coordinate
     public void interact(Coordinate coord) {
-        if (isOncomingsPiece(coord) && isFirstMove) {
+        if (currentPlayer == map.getTeam(coord) && isFirstMove) {
             activeCoordinate = coord;
-            map.selectTile(activeCoordinate, currentPlayer);
+            map.selectTile(activeCoordinate);
 
         } else if (activeCoordinate != null && map.movePiece(activeCoordinate, coord)) {
             isFirstMove = false;
 
             if(map.isTurnOver()) {
                 endOfTurn(coord);
-                changeActivePlayer();
                 return;
             }
 
-            changeActivePlayer();
             activeCoordinate = map.getNextPieceCoordinate(coord);
+            currentPlayer = map.getTeam(activeCoordinate);
 
-            // Only runs if AI is present
-            if (isBotPlaying) useBot(activeCoordinate);
+            // Bot is gonna be used when it is present in the game
+            if (isBotPlaying && currentPlayer == TeamEnum.WHITE) useBot(activeCoordinate);
         }
     }
 
+    // Runs bot's algorithm on the current state of the map for a move to make
     private void useBot(Coordinate coord) {
-        coord = ai.getBestMove(activeCoordinate, getMap());
+        coord = ai.getMovement(activeCoordinate, getMap());
         if (map.movePiece(activeCoordinate, coord)) {
             activeCoordinate = map.getNextPieceCoordinate(coord);
             if(map.isTurnOver()) {
                 endOfTurn(coord);
-                changeActivePlayer(TeamEnum.BLACK);
             }
         }
     }
 
+    // This resets the map, variables, and gives points to the player who won, should run on entering enemies base line
     private void endOfTurn(Coordinate coord) {
         increasePoints(coord);
+        if (isBotPlaying) currentPlayer = TeamEnum.BLACK;
+        else currentPlayer = map.getTeam(coord) == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
         isFirstMove = true;
         activeCoordinate = null;
+        map.resetMap();
     }
 
+    // getter for points
     public int[] getPoints() {
         return points;
     }
 
-    public void changeActivePlayer() {
-        if (currentPlayer == TeamEnum.BLACK)
-            currentPlayer = TeamEnum.WHITE;
-        else 
-            currentPlayer = TeamEnum.BLACK;
-    }
-
-    private void changeActivePlayer(TeamEnum team) {
-        currentPlayer = team;
-    }
-
+    // getter for map (used to draw the map)
     public Tile[][] getMap() {
         return map.getMap();
     }
 
+    // getter for selected tile (used to visualize)
     public Coordinate getSelected() {
         return map.getSelected();
     }
 
+    // gives point to the player on the corresponding coordinate
     private void increasePoints(Coordinate coord) {
         if (currentPlayer == TeamEnum.BLACK) {
             points[0] += map.getDragonTeeth(coord) + 1;
         } else {
             points[1] += map.getDragonTeeth(coord) + 1;
         }
-    }
-
-    public boolean isOncomingsPiece(Coordinate coord) {
-        return map.getTeam(coord) == currentPlayer;
     }
 }

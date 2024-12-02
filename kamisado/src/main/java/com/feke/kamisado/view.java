@@ -1,6 +1,5 @@
 package com.feke.kamisado;
 
-import java.io.IOException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -10,13 +9,21 @@ import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 
-class View {
-    private final JFrame frame;
+public class View extends JFrame {
+    private final JFrame frame = this;
     private final Controller controller;
     private JPanel panel;
 
@@ -51,7 +58,6 @@ class View {
 
     View(Controller controller) {
         this.controller = controller;
-        frame = new JFrame();
         panel = new JPanel();
 
         classLoader = getClass().getClassLoader();
@@ -62,7 +68,7 @@ class View {
         frame.setMinimumSize(new Dimension(410, 410));
         frame.setResizable(false);
         frame.setLayout(new GridLayout(0,1));
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         frame.setContentPane(panel);
         frame.pack();
@@ -85,6 +91,14 @@ class View {
         });
     }
 
+    // Saves the game state on closing the app
+    @Override
+    public void dispose() {
+        //controller.save(); commented for debugging purpuses
+        super.dispose();
+    }
+
+    // Calls for further rendering jobs
     public void renderGame(Tile[][] tiles) {
         frame.getContentPane().removeAll();
         setupPanel();
@@ -95,6 +109,7 @@ class View {
         panel.revalidate();
     }
 
+    // Renders the menu
     public void renderMenu() {
         frame.getContentPane().removeAll();
         setupPanel();
@@ -125,6 +140,7 @@ class View {
         panel.revalidate();
     }
 
+    // Renders the game options
     public void renderGameOptions(boolean isBotPlaying) {
         panel.removeAll();
         setupPanel();
@@ -155,6 +171,7 @@ class View {
         panel.revalidate();
     }
 
+    // Renders the map tiles, calls for individual rendering
     private void renderTiles(Tile[][] tiles) {
         
         for (int i = 0; i < tiles.length; i++) {
@@ -164,6 +181,7 @@ class View {
         }
     }
 
+    // Renders individual tiles with their respective states
     private void renderTile(Tile tile, int x, int y) {
         if (tile.isOccupied()) {
             
@@ -186,6 +204,7 @@ class View {
         }
     }
 
+    // Renders individual tiles with their respective pieces on top
     private ImageIcon getPiecedTileGraphics(Tile tile) {
         Piece piece = tile.getPiece();
 
@@ -204,6 +223,7 @@ class View {
         return new ImageIcon(combinedImage);
     }
 
+    // Assings colors for the tiles
     Color getColor(ColorEnum colorEnum) {
         switch (colorEnum) {
             case ORANGE -> {return new Color(255,165,0);}
@@ -219,6 +239,7 @@ class View {
         }
     }
 
+    // Returns the "piece image" in respect to the team, and color provided, defaults to no image 
     private Image getImage(TeamEnum team, ColorEnum color) {
         if (team == TeamEnum.BLACK) {
             switch (color) {
@@ -247,6 +268,7 @@ class View {
         }
     }
 
+    // Returns the "teeth image" in respect to the team, and teeth count provided, defaults to no image 
     private Image getImage(TeamEnum team, int teeth) {
         if (team == TeamEnum.BLACK) {
             switch (teeth) {
@@ -260,11 +282,12 @@ class View {
                 case 1 -> { return white1Sumo; }
                 case 2 -> { return white2Sumo; }
                 case 3 -> { return white3Sumo; }
-                default -> { return new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB); }
+                default -> { return new BufferedImage(0, 0, 0, null); }
             }
         }
     }
 
+    // Sets up the panel to render objects on it
     private void setupPanel() {
         panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -274,10 +297,12 @@ class View {
         frame.pack();
     }
 
+    // Closes the window
     private void exit() {                                  
         frame.dispose();
     }
     
+    // Loads the images into variables
     private void imageLoader() {
         try {
             blueBlack = ImageIO.read(classLoader.getResourceAsStream("pieces/blueTower_black.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
@@ -305,7 +330,7 @@ class View {
             white2Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo2_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
             white3Sumo = ImageIO.read(classLoader.getResourceAsStream("pieces/sumo/sumo3_white.png")).getScaledInstance(50, 50, Image.SCALE_DEFAULT);
         } catch (IOException e) {
-            e.printStackTrace(); // Handle exceptions
+            e.printStackTrace();
         }
     }
 }

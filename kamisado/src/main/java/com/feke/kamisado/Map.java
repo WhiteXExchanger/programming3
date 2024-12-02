@@ -5,10 +5,11 @@ import java.io.Serializable;
 public class Map implements Serializable {
 
     private Tile[][] tileMatrix = new Tile[8][8];;
-    private boolean blackOnBottom;
+    private boolean blackOnBottom = true;
+    private boolean isBotPlaying = false;
 
-    Map(boolean blackOnBottom) {
-        this.blackOnBottom = blackOnBottom;
+    Map(boolean isBotPlaying) {
+        this.isBotPlaying = isBotPlaying;
         placeTiles();
         placePieces();
     }
@@ -55,6 +56,7 @@ public class Map implements Serializable {
         }
     }
 
+    // Returns the coordiante of the selected Tile if there is one, otherwise it returns null
     public Coordinate getSelected() {
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
@@ -63,9 +65,11 @@ public class Map implements Serializable {
                 }
             }
         }
+        
         return null;
     }
 
+    // Places the black pieces on the inputed row
     private void placeBlack(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][i].getColor());
@@ -73,10 +77,12 @@ public class Map implements Serializable {
         }
     }
 
+    // Returns the map for visualization
     public Tile[][] getMap() {
         return tileMatrix;
     }
-
+    
+    // Places the white pieces on the inputed row
     private void placeWhite(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][i].getColor());
@@ -84,6 +90,9 @@ public class Map implements Serializable {
         }
     }
 
+    /*  Tests if the inputed currCoord has a piece, and if the nextCoord is flagged for movement,
+        if it is moves it to the new coordinate and returns true,
+        otherwise it returns false */
     public boolean movePiece(Coordinate currCoord, Coordinate nextCoord) {
         Tile tile = getTile(nextCoord);
         Piece piece = getPiece(currCoord);
@@ -94,11 +103,10 @@ public class Map implements Serializable {
         return true;
     }
 
-    public void selectTile(Coordinate activeCoordinate, TeamEnum currentPlayer) {
-        flagTiles(activeCoordinate, currentPlayer);
-    }
-
-    private void resetMap() {
+    /*
+     * Resets the map, then copies the pieces to the new map
+     */
+    public void resetMap() {
         Piece[] pieces = getAllPieces();
         
         placeTiles();
@@ -120,11 +128,13 @@ public class Map implements Serializable {
         }
     }
 
+    /* Checks if the provided pieces have the same team and color */
     private boolean isSamePiece(Piece p1, Piece p2) {
         if (p1 == null) return false;
         return p1.getTeam() == p2.getTeam() && p1.getColor() == p2.getColor();
     }
 
+    /* Returns all pieces from the map */
     private Piece[] getAllPieces() {
         Piece[] pieces = new Piece[16];
         int i = 0;
@@ -139,6 +149,7 @@ public class Map implements Serializable {
         return pieces;
     }
 
+    /* Searches the map for the piece which has the provided color and team */
     private Coordinate getPieceCoordinate(ColorEnum color, TeamEnum team) {
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
@@ -152,13 +163,18 @@ public class Map implements Serializable {
         return null;
     }
 
+    /*  Returns the coordinate of the next piece based on the
+        - color of the tile 
+        - the opposite team of the piece 
+        which are on the provided coordinate 
+    */
     public Coordinate getNextPieceCoordinate(Coordinate coord) {
         ColorEnum color = getTileColor(coord);
         TeamEnum team = getPiece(coord).getTeam();
         
         team = team == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
         coord = getPieceCoordinate(color, team);
-        while (!flagTiles(coord, team)) {
+        while (!selectTile(coord)) {
             team = team == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
             color = getTileColor(coord);
             coord = getPieceCoordinate(color, team);
@@ -167,21 +183,26 @@ public class Map implements Serializable {
         return coord;
     }
 
-    private boolean flagTiles(Coordinate position, TeamEnum currentPlayer) {
+    /*
+     * This method is resposible for traversing the map and flagging the tiles,
+     * which are valid movement options for the provided coordinate's piece.
+     * If there are none it returns false, otherwise true.
+     */
+    public boolean selectTile(Coordinate coord) {
         this.unflagTiles();
 
-        Tile startingTile = tileMatrix[position.getY()][position.getX()];
+        Tile startingTile = tileMatrix[coord.getY()][coord.getX()];
         Piece piece = startingTile.getPiece();
         if (piece == null) return false;
         startingTile.select();
         int length = piece.getMovementLength();
-        int x = position.getX();
-        int y = position.getY();
+        int x = coord.getX();
+        int y = coord.getY();
         int direction; // -1 for downward, 1 for upward            
         if (blackOnBottom) {
-            direction = currentPlayer == TeamEnum.BLACK ? 1 : -1;
+            direction = piece.getTeam() == TeamEnum.BLACK ? 1 : -1;
         } else {
-            direction = currentPlayer == TeamEnum.BLACK ? -1 : 1;
+            direction = piece.getTeam() == TeamEnum.BLACK ? -1 : 1;
         }
     
         int tileCounter = 0;
@@ -215,6 +236,7 @@ public class Map implements Serializable {
         return (tileCounter > 0);
     }
     
+    /* Removes the flagged state from all tiles */
     public void unflagTiles() {
         for (Tile[] tiles : tileMatrix) {
             for (Tile tile : tiles) {
@@ -223,6 +245,7 @@ public class Map implements Serializable {
         }
     }
 
+    /* Checks if a piece moved to the enemy's base line */
     public boolean isTurnOver() {
         Piece investigatedPiece;
         TeamEnum team;
@@ -231,7 +254,8 @@ public class Map implements Serializable {
             if (investigatedPiece == null) continue;
             team = investigatedPiece.getTeam();
             if (blackOnBottom && team == TeamEnum.BLACK || !blackOnBottom && team == TeamEnum.WHITE) {
-                System.out.println("Turn over");
+                investigatedPiece.increaseDragonTeeth();
+                if (!isBotPlaying) blackOnBottom = team != TeamEnum.BLACK;
                 return true;
             }
             
@@ -239,29 +263,35 @@ public class Map implements Serializable {
             if (investigatedPiece == null) continue;
             team = investigatedPiece.getTeam();
             if (blackOnBottom && team == TeamEnum.WHITE || !blackOnBottom && team == TeamEnum.BLACK) {
-                System.out.println("Turn over");
+                investigatedPiece.increaseDragonTeeth();
+                if (!isBotPlaying) blackOnBottom = team != TeamEnum.BLACK;
                 return true;
             }
         }
         return false;
     }
 
+    /* Returns the tile from the provided coordinate */
     private Tile getTile(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()];
     }
 
+    /* Returns the piece from the provided coordinate */
     private Piece getPiece(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece();
     }
 
+    /* Returns the amount of teeth the piece has at the provided coordinate */
     public int getDragonTeeth(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece().getDragonTeeth();
     }
 
+    /* Returns the value a piece can move at the provided coordinate */
     public int getMovementLength(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece().getMovementLength();
     }
 
+    /* Returns the team of the piece at the provided coordinate */
     public TeamEnum getTeam(Coordinate coord) {
         Piece piece = tileMatrix[coord.getY()][coord.getX()].getPiece();
         if (piece == null) {
@@ -270,6 +300,7 @@ public class Map implements Serializable {
         return piece.getTeam();
     }
 
+    /* Returns the color of the tile at the provided coordinate */
     public  ColorEnum getTileColor(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getColor();
     }

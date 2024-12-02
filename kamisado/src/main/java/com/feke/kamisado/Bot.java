@@ -2,8 +2,9 @@ package com.feke.kamisado;
 
 import java.util.ArrayList;
 
-public class Ai {
-    public Coordinate getBestMove(Coordinate coord, Tile[][] matrix) {
+public class Bot {
+    // Returns the coordiante to move to
+    public Coordinate getMovement(Coordinate coord, Tile[][] matrix) {
         Position position = new Position(matrix, coord);
         ArrayList<Coordinate> movements = position.getValidMovements(coord);
         ArrayList<Position> positions = new ArrayList<>();
@@ -28,10 +29,10 @@ public class Ai {
                 index = i;
             }
         }
-        System.out.println(movements.get(index));
         return movements.get(index);
     }
 
+    // Minimax algorithm for calculating a good postion to move to
     private int minimax(Position position, int depth, int alpha, int beta, boolean maximizingPlayer) {
         if (depth == 0 || position.isEndOfGame()) {
             return position.getEvaluation();

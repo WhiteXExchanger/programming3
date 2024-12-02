@@ -26,6 +26,7 @@ public class Position {
         return coordinate;
     }
 
+
     public int getEvaluation() {
         int evalOfPosition = 0;
 
@@ -47,30 +48,37 @@ public class Position {
         return evalOfPosition;
     }
 
+    /*  Assings value to the postion provided. Modifier makes it negative/positive.
+        Coordinate is provided to determine what is the value of the individual piece in the current postion. 
+    */
     private int calculateEvaluationForPiecePosition(int modifier, Coordinate coord) {
         int value = 0;
         if (inEndingPosition(coord)) 
-            value += 150 * modifier * simulatedMap.getDragonTeeth(coord) + 1;
+            value += 1000 * modifier * simulatedMap.getDragonTeeth(coord) + 1;
         if (inEndingMovePosition(coord))
-            value += 30 * modifier;
+            value += 80 * modifier;
         if (blockingEnemyPiece(coord))
             value += 10 * modifier;
         return value;
     }
 
+    // Checks if this position's piece is in a "game ending" postion or not
     public boolean isEndOfGame() {
         return inEndingPosition(coordinate);
     }
 
+    // Checks if this position's piece is in coordinate where he blocks one, or more of the enemy's pieces
     private boolean blockingEnemyPiece(Coordinate coord) {
         return false;
     }
 
+    // Checks if the piece on the provided coordinate is in a "game ending" postion or not
     private boolean inEndingPosition(Coordinate coord) {
         return simulatedMap.getTeam(coord) == TeamEnum.BLACK && coord.getY() == 0 || 
             simulatedMap.getTeam(coord) == TeamEnum.WHITE && coord.getY() == 7;
     }
 
+    // Checks if the piece on the provided coordinate is in a "game ending move" postion or not
     private boolean inEndingMovePosition(Coordinate coord) {
         ArrayList<Coordinate> coords = getValidMovements(coord);
         boolean isEndingMove = false;
@@ -94,6 +102,7 @@ public class Position {
         return isEndingMove;
     }
 
+    // Returns a list which has all the positions which are available from this position
     public ArrayList<Position> getPossiblePositions() {
         ArrayList<Position> positions = new ArrayList<>();
         ArrayList<Coordinate> movements = getValidMovements(coordinate);
@@ -110,6 +119,7 @@ public class Position {
         return positions;
     }
 
+    // Returns a list which has all the coordinates which are available from this position
     public ArrayList<Coordinate> getValidMovements(Coordinate coord) {
         ArrayList<Coordinate> coords = new ArrayList<>();
 
@@ -124,6 +134,7 @@ public class Position {
         int x = coord.getX();
         int y = coord.getY();
 
+        // Diagonal (right)
         for (int i = 1; x + i * direction < 8 && y - i * direction < 8
         && x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
             Tile tile = simulatedMap.getMap()[y - direction * i][x + direction * i];
@@ -150,6 +161,7 @@ public class Position {
         return coords;
     }
 
+    // Returns the coordinate of the next piece, which has the same color of the tile thats on the provided coordinate 
     private Coordinate getNextPieceCoord(Coordinate coord) {
         TeamEnum oposedTeam = simulatedMap.getTeam(coord);
         ColorEnum color = simulatedMap.getTileColor(coord);

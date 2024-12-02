@@ -2,7 +2,7 @@ package com.feke.kamisado;
 
 import java.io.Serializable;
 
-class Piece implements Serializable {
+public class Piece implements Serializable {
     private ColorEnum color;
     private TeamEnum team;
     private int dragonTeeth;
