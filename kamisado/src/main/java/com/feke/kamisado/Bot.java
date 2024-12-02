@@ -2,12 +2,26 @@ package com.feke.kamisado;
 
 import java.util.ArrayList;
 
+/**
+ * Represents the bot logic for the game. The bot uses the minimax algorithm 
+ * to determine the optimal move based on the current board state.
+ */
 public class Bot {
-    // Returns the coordiante to move to
+    
+    /**
+     * Calculates the best possible movement for the bot using the minimax algorithm.
+     * Takes the current coordinate of a piece and the game board state as input.
+     *
+     * @param coord  The current coordinate of the piece being moved by the bot.
+     * @param matrix The current state of the board represented as a 2D array of Tiles.
+     * @return The coordinate of the optimal move for the bot to make.
+     */
     public Coordinate getMovement(Coordinate coord, Tile[][] matrix) {
         Position position = new Position(matrix, coord);
         ArrayList<Coordinate> movements = position.getValidMovements(coord);
         ArrayList<Position> positions = new ArrayList<>();
+        
+        // Generate all possible positions based on the valid movements.
         for (Coordinate coordinate : movements) {
             Tile[][] matrixCopy = new Tile[8][8];
             for (int i = 0; i < 8; i++) {
@@ -17,12 +31,15 @@ public class Bot {
             }
             positions.add(new Position(matrixCopy, coord, coordinate));
         }
+        
         int[] values = new int[positions.size()];
 
+        // Use the minimax algorithm to evaluate each possible position.
         for (int i = 0; i < positions.size(); i++) {
             values[i] = minimax(positions.get(i), 5, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
         }
 
+        // Find the position with the highest evaluation score.
         int index = 0;
         for (int i = 0; i < values.length; i++) {
             if (values[i] > values[index]) {
@@ -32,8 +49,18 @@ public class Bot {
         return movements.get(index);
     }
 
-    // Minimax algorithm for calculating a good postion to move to
+    /**
+     * Implements the minimax algorithm with alpha-beta pruning to determine the value of a given position.
+     *
+     * @param position          The current position being evaluated.
+     * @param depth             The depth to which the algorithm should evaluate moves.
+     * @param alpha             The alpha value for alpha-beta pruning.
+     * @param beta              The beta value for alpha-beta pruning.
+     * @param maximizingPlayer  Indicates whether the current layer is maximizing or minimizing.
+     * @return The evaluation value of the given position.
+     */
     private int minimax(Position position, int depth, int alpha, int beta, boolean maximizingPlayer) {
+        // Base case: If we reach the maximum depth or an end-of-game position.
         if (depth == 0 || position.isEndOfGame()) {
             return position.getEvaluation();
         }
@@ -45,7 +72,7 @@ public class Bot {
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
                 if (beta <= alpha) {
-                    break;
+                    break; // Beta cut-off
                 }
             }
             return maxEval;
@@ -56,7 +83,7 @@ public class Bot {
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
                 if (beta <= alpha) {
-                    break;
+                    break; // Alpha cut-off
                 }
             }
             return minEval;

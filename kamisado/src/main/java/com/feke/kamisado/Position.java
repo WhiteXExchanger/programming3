@@ -2,15 +2,32 @@ package com.feke.kamisado;
 
 import java.util.ArrayList;
 
+/**
+ * Represents a position on the game board.
+ * Evaluates and manages the position of pieces for gameplay purposes.
+ */
 public class Position {
     private Map simulatedMap;
     private Coordinate coordinate;
 
+    /**
+     * Constructs a Position object using the given matrix and coordinate.
+     *
+     * @param matrix     The tile matrix representing the board state.
+     * @param coordinate The coordinate of the position.
+     */
     Position(Tile[][] matrix, Coordinate coordinate) {
         simulatedMap = new Map(matrix);
         this.coordinate = coordinate;
     }
 
+    /**
+     * Constructs a Position object by moving a piece from one coordinate to another.
+     *
+     * @param matrix The tile matrix representing the board state.
+     * @param coord1 The original coordinate of the piece.
+     * @param coord2 The destination coordinate for the piece.
+     */
     Position(Tile[][] matrix, Coordinate coord1, Coordinate coord2) {
         matrix[coord2.getY()][coord2.getX()].setPiece(matrix[coord1.getY()][coord1.getX()].getPiece());
         matrix[coord1.getY()][coord1.getX()].clearPiece();
@@ -18,15 +35,29 @@ public class Position {
         coordinate = getNextPieceCoord(coord2);
     }
 
+    /**
+     * Returns a string representation of the position.
+     *
+     * @return A string representation of the coordinate.
+     */
     public String toString() {
-        return coordinate+" ";
+        return coordinate + " ";
     }
 
+    /**
+     * Gets the coordinate of this position.
+     *
+     * @return The coordinate of this position.
+     */
     public Coordinate getCoordinate() {
         return coordinate;
     }
 
-
+    /**
+     * Evaluates the position to determine its value for decision-making in gameplay.
+     *
+     * @return The evaluation score of this position.
+     */
     public int getEvaluation() {
         int evalOfPosition = 0;
 
@@ -48,9 +79,13 @@ public class Position {
         return evalOfPosition;
     }
 
-    /*  Assings value to the postion provided. Modifier makes it negative/positive.
-        Coordinate is provided to determine what is the value of the individual piece in the current postion. 
-    */
+    /**
+     * Assigns a value to the given piece position based on its state.
+     *
+     * @param modifier Modifier to adjust the score (positive or negative).
+     * @param coord    The coordinate of the piece being evaluated.
+     * @return The calculated value for the given piece position.
+     */
     private int calculateEvaluationForPiecePosition(int modifier, Coordinate coord) {
         int value = 0;
         if (inEndingPosition(coord)) 
@@ -62,47 +97,62 @@ public class Position {
         return value;
     }
 
-    // Checks if this position's piece is in a "game ending" postion or not
+    /**
+     * Checks if this position is a game-ending position for a piece.
+     *
+     * @return True if the piece is in a game-ending position, false otherwise.
+     */
     public boolean isEndOfGame() {
         return inEndingPosition(coordinate);
     }
 
-    // Checks if this position's piece is in coordinate where he blocks one, or more of the enemy's pieces
+    /**
+     * Checks if the given coordinate blocks an enemy piece.
+     *
+     * @param coord The coordinate to check.
+     * @return True if the piece blocks an enemy piece, false otherwise.
+     */
     private boolean blockingEnemyPiece(Coordinate coord) {
-        return false;
+        return false; // Placeholder implementation.
     }
 
-    // Checks if the piece on the provided coordinate is in a "game ending" postion or not
+    /**
+     * Checks if the piece on the provided coordinate is in a game-ending position.
+     *
+     * @param coord The coordinate of the piece.
+     * @return True if the piece is in a game-ending position, false otherwise.
+     */
     private boolean inEndingPosition(Coordinate coord) {
-        return simulatedMap.getTeam(coord) == TeamEnum.BLACK && coord.getY() == 0 || 
-            simulatedMap.getTeam(coord) == TeamEnum.WHITE && coord.getY() == 7;
+        return simulatedMap.getTeam(coord) == TeamEnum.BLACK && coord.getY() == 0 ||
+               simulatedMap.getTeam(coord) == TeamEnum.WHITE && coord.getY() == 7;
     }
 
-    // Checks if the piece on the provided coordinate is in a "game ending move" postion or not
+    /**
+     * Checks if the piece on the provided coordinate is in a position where it can make a game-ending move.
+     *
+     * @param coord The coordinate of the piece.
+     * @return True if the piece can make a game-ending move, false otherwise.
+     */
     private boolean inEndingMovePosition(Coordinate coord) {
         ArrayList<Coordinate> coords = getValidMovements(coord);
         boolean isEndingMove = false;
-        boolean isWhite = false;
-        if (simulatedMap.getTeam(coord) == TeamEnum.WHITE) {
-            isWhite = true;
-        } 
+        boolean isWhite = simulatedMap.getTeam(coord) == TeamEnum.WHITE;
 
         for (Coordinate c : coords) {
-            if (isWhite) {
-                if (c.getY() == 7) {
-                    isEndingMove = true;
-                }
-            } else {
-                if (c.getY() == 0) {
-                    isEndingMove = true;
-                }
+            if ((isWhite && c.getY() == 7) || (!isWhite && c.getY() == 0)) {
+                isEndingMove = true;
+                break;
             }
         }
 
         return isEndingMove;
     }
 
-    // Returns a list which has all the positions which are available from this position
+    /**
+     * Gets all possible positions that can be reached from the current position.
+     *
+     * @return A list of possible positions from this position.
+     */
     public ArrayList<Position> getPossiblePositions() {
         ArrayList<Position> positions = new ArrayList<>();
         ArrayList<Coordinate> movements = getValidMovements(coordinate);
@@ -115,44 +165,40 @@ public class Position {
             }
             positions.add(new Position(matrix, coordinate, coord));
         }
-
         return positions;
     }
 
-    // Returns a list which has all the coordinates which are available from this position
+    /**
+     * Gets all valid movements from the given coordinate.
+     *
+     * @param coord The coordinate of the piece.
+     * @return A list of coordinates representing valid movements.
+     */
     public ArrayList<Coordinate> getValidMovements(Coordinate coord) {
         ArrayList<Coordinate> coords = new ArrayList<>();
-
         int length = simulatedMap.getMovementLength(coord);
-
-        int direction;
-        if (simulatedMap.getTeam(coord) == TeamEnum.WHITE) {
-            direction = -1;
-        } else {
-            direction = 1;
-        }
+        int direction = simulatedMap.getTeam(coord) == TeamEnum.WHITE ? -1 : 1;
         int x = coord.getX();
         int y = coord.getY();
 
         // Diagonal (right)
-        for (int i = 1; x + i * direction < 8 && y - i * direction < 8
-        && x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+        for (int i = 1; x + i * direction < 8 && y - i * direction < 8 &&
+             x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
             Tile tile = simulatedMap.getMap()[y - direction * i][x + direction * i];
             if (tile.isOccupied()) break;
             coords.add(new Coordinate(x + direction * i, y - direction * i));
         }
-    
+
         // Vertical
-        for (int i = 1; y - i * direction < 8 && y - i * direction >= 0
-        && i <= length; i++) {
+        for (int i = 1; y - i * direction < 8 && y - i * direction >= 0 && i <= length; i++) {
             Tile tile = simulatedMap.getMap()[y - direction * i][x];
             if (tile.isOccupied()) break;
             coords.add(new Coordinate(x, y - direction * i));
         }
-    
+
         // Diagonal (left)
-        for (int i = 1; x - i * direction < 8 && y - i * direction < 8
-        && x - i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+        for (int i = 1; x - i * direction < 8 && y - i * direction < 8 &&
+             x - i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
             Tile tile = simulatedMap.getMap()[y - direction * i][x - direction * i];
             if (tile.isOccupied()) break;
             coords.add(new Coordinate(x - direction * i, y - direction * i));
@@ -161,20 +207,26 @@ public class Position {
         return coords;
     }
 
-    // Returns the coordinate of the next piece, which has the same color of the tile thats on the provided coordinate 
+    /**
+     * Gets the next piece coordinate with the same color but from the opposite team as the given coordinate.
+     *
+     * @param coord The current coordinate of the piece.
+     * @return The coordinate of the next piece, or (-1, -1) if none found.
+     */
     private Coordinate getNextPieceCoord(Coordinate coord) {
-        TeamEnum oposedTeam = simulatedMap.getTeam(coord);
+        TeamEnum opposedTeam = simulatedMap.getTeam(coord) == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
         ColorEnum color = simulatedMap.getTileColor(coord);
 
         for (int i = 0; i < simulatedMap.getMap().length; i++) {
             for (int j = 0; j < simulatedMap.getMap().length; j++) {
                 Tile tile = simulatedMap.getMap()[i][j];
-                if (tile.getPiece() != null && tile.getPiece().getTeam() != oposedTeam && tile.getPiece().getColor() == color) {
+                Piece piece = tile.getPiece();
+                if (piece != null && piece.getTeam() == opposedTeam && piece.getColor() == color) {
                     return new Coordinate(j, i);
                 }
             }
         }
 
-        return new Coordinate(-1,-1);
+        return new Coordinate(-1, -1);
     }
 }

@@ -2,25 +2,41 @@ package com.feke.kamisado;
 
 import java.io.Serializable;
 
+/**
+ * Represents the game map, which includes the board's tiles and manages the pieces.
+ * Implements Serializable to allow the map to be saved and restored.
+ */
 public class Map implements Serializable {
 
-    private Tile[][] tileMatrix = new Tile[8][8];;
+    private Tile[][] tileMatrix = new Tile[8][8];
     private boolean blackOnBottom = true;
     private boolean isBotPlaying = false;
 
+    /**
+     * Constructs a Map object with the specified setting for bot involvement.
+     *
+     * @param isBotPlaying boolean indicating whether a bot is involved in the game.
+     */
     Map(boolean isBotPlaying) {
         this.isBotPlaying = isBotPlaying;
         placeTiles();
         placePieces();
     }
 
+    /**
+     * Constructs a Map object from a given tile matrix.
+     *
+     * @param tileMatrix the matrix of tiles to use for this Map.
+     */
     Map(Tile[][] tileMatrix) {
         this.tileMatrix = tileMatrix;
     }
 
+    /**
+     * Places tiles on the board in their appropriate positions.
+     */
     private void placeTiles() {
-
-        // ---------- www.github.com/mandriv/kamisado/blob/master/src/kamisado/logic/Board.java ----------
+        // The specific tile arrangement is based on certain color patterns.
         int[] counters = {0, 1, 2, 3, 4, 5, 6, 7};
         for (Tile[] rows : tileMatrix) {
             rows[counters[0]] = new Tile(ColorEnum.ORANGE);
@@ -40,9 +56,12 @@ public class Map implements Serializable {
             rows[counters[7]] = new Tile(ColorEnum.BROWN);
             counters[7] = (counters[7] + 7) % 8;
         }
-        // -----------------------------------------------------------------------------------------------
     }
 
+    /**
+     * Places the pieces on the board according to their respective positions.
+     * White pieces are placed on one side, black pieces on the other.
+     */
     private void placePieces() {
         int topIndex = 0;
         int bottomIndex = 7;
@@ -56,7 +75,11 @@ public class Map implements Serializable {
         }
     }
 
-    // Returns the coordiante of the selected Tile if there is one, otherwise it returns null
+    /**
+     * Gets the coordinate of the currently selected tile.
+     *
+     * @return The coordinate of the selected tile, or null if no tile is selected.
+     */
     public Coordinate getSelected() {
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
@@ -65,11 +88,14 @@ public class Map implements Serializable {
                 }
             }
         }
-        
         return null;
     }
 
-    // Places the black pieces on the inputed row
+    /**
+     * Places black pieces on the specified row.
+     *
+     * @param lineIndex The index of the row where black pieces should be placed.
+     */
     private void placeBlack(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.BLACK, tileMatrix[lineIndex][i].getColor());
@@ -77,12 +103,20 @@ public class Map implements Serializable {
         }
     }
 
-    // Returns the map for visualization
+    /**
+     * Gets the map matrix for visualization purposes.
+     *
+     * @return A 2D array of Tile objects representing the map.
+     */
     public Tile[][] getMap() {
         return tileMatrix;
     }
-    
-    // Places the white pieces on the inputed row
+
+    /**
+     * Places white pieces on the specified row.
+     *
+     * @param lineIndex The index of the row where white pieces should be placed.
+     */
     private void placeWhite(int lineIndex) {
         for (int i = 0; i < tileMatrix.length; i++) {
             Piece piece = new Piece(TeamEnum.WHITE, tileMatrix[lineIndex][i].getColor());
@@ -90,25 +124,28 @@ public class Map implements Serializable {
         }
     }
 
-    /*  Tests if the inputed currCoord has a piece, and if the nextCoord is flagged for movement,
-        if it is moves it to the new coordinate and returns true,
-        otherwise it returns false */
+    /**
+     * Moves a piece from the current coordinate to the next coordinate if the move is valid.
+     *
+     * @param currCoord The current coordinate of the piece.
+     * @param nextCoord The target coordinate for the move.
+     * @return True if the move is successful, false otherwise.
+     */
     public boolean movePiece(Coordinate currCoord, Coordinate nextCoord) {
         Tile tile = getTile(nextCoord);
         Piece piece = getPiece(currCoord);
         if (!tile.isFlagged() || piece == null) return false;
-        
+
         tile.setPiece(piece);
         tileMatrix[currCoord.getY()][currCoord.getX()].clearPiece();
         return true;
     }
 
-    /*
-     * Resets the map, then copies the pieces to the new map
+    /**
+     * Resets the map and repositions pieces.
      */
     public void resetMap() {
         Piece[] pieces = getAllPieces();
-        
         placeTiles();
         placePieces();
 
@@ -128,13 +165,23 @@ public class Map implements Serializable {
         }
     }
 
-    /* Checks if the provided pieces have the same team and color */
+    /**
+     * Checks if two pieces have the same team and color.
+     *
+     * @param p1 The first piece.
+     * @param p2 The second piece.
+     * @return True if both pieces have the same team and color, false otherwise.
+     */
     private boolean isSamePiece(Piece p1, Piece p2) {
         if (p1 == null) return false;
         return p1.getTeam() == p2.getTeam() && p1.getColor() == p2.getColor();
     }
 
-    /* Returns all pieces from the map */
+    /**
+     * Retrieves all pieces from the map.
+     *
+     * @return An array containing all the pieces currently on the map.
+     */
     private Piece[] getAllPieces() {
         Piece[] pieces = new Piece[16];
         int i = 0;
@@ -149,13 +196,18 @@ public class Map implements Serializable {
         return pieces;
     }
 
-    /* Searches the map for the piece which has the provided color and team */
+    /**
+     * Searches for the piece with the specified color and team.
+     *
+     * @param color The color of the piece.
+     * @param team  The team of the piece.
+     * @return The coordinate of the piece, or null if it isn't found.
+     */
     private Coordinate getPieceCoordinate(ColorEnum color, TeamEnum team) {
         for (int i = 0; i < tileMatrix.length; i++) {
             for (int j = 0; j < tileMatrix.length; j++) {
                 Piece piece = tileMatrix[i][j].getPiece();
-                if (piece == null) { }
-                else if (piece.getTeam() == team && piece.getColor() == color) {
+                if (piece != null && piece.getTeam() == team && piece.getColor() == color) {
                     return new Coordinate(j, i);
                 }
             }
@@ -163,15 +215,15 @@ public class Map implements Serializable {
         return null;
     }
 
-    /*  Returns the coordinate of the next piece based on the
-        - color of the tile 
-        - the opposite team of the piece 
-        which are on the provided coordinate 
-    */
+    /**
+     * Returns the next piece's coordinate based on the provided piece's color and opposing team.
+     *
+     * @param coord The coordinate of the current piece.
+     * @return The coordinate of the next piece.
+     */
     public Coordinate getNextPieceCoordinate(Coordinate coord) {
         ColorEnum color = getTileColor(coord);
         TeamEnum team = getPiece(coord).getTeam();
-        
         team = team == TeamEnum.BLACK ? TeamEnum.WHITE : TeamEnum.BLACK;
         coord = getPieceCoordinate(color, team);
         while (!selectTile(coord)) {
@@ -179,64 +231,37 @@ public class Map implements Serializable {
             color = getTileColor(coord);
             coord = getPieceCoordinate(color, team);
         }
-        
         return coord;
     }
 
-    /*
-     * This method is resposible for traversing the map and flagging the tiles,
-     * which are valid movement options for the provided coordinate's piece.
-     * If there are none it returns false, otherwise true.
+    /**
+     * Flags the tiles that can be moved to from the provided coordinate.
+     *
+     * @param coord The coordinate of the piece that is being moved.
+     * @return True if valid moves are available, false otherwise.
      */
     public boolean selectTile(Coordinate coord) {
         this.unflagTiles();
-
         Tile startingTile = tileMatrix[coord.getY()][coord.getX()];
         Piece piece = startingTile.getPiece();
         if (piece == null) return false;
+
         startingTile.select();
         int length = piece.getMovementLength();
         int x = coord.getX();
         int y = coord.getY();
-        int direction; // -1 for downward, 1 for upward            
-        if (blackOnBottom) {
-            direction = piece.getTeam() == TeamEnum.BLACK ? 1 : -1;
-        } else {
-            direction = piece.getTeam() == TeamEnum.BLACK ? -1 : 1;
-        }
-    
-        int tileCounter = 0;
-        // Diagonal (right)
-        for (int i = 1; x + i * direction < 8 && y - i * direction < 8
-        && x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
-            Tile tile = tileMatrix[y - direction * i][x + direction * i];
-            if (tile.isOccupied()) break;
-            tile.flag();
-            tileCounter++;
-        }
-    
-        // Vertical
-        for (int i = 1; y - i * direction < 8 && y - i * direction >= 0
-        && i <= length; i++) {
-            Tile tile = tileMatrix[y - direction * i][x];
-            if (tile.isOccupied()) break; 
-            tile.flag();
-            tileCounter++;
-        }
-    
-        // Diagonal (left)
-        for (int i = 1; x - i * direction < 8 && y - i * direction < 8
-        && x - i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
-            Tile tile = tileMatrix[y - direction * i][x - direction * i];
-            if (tile.isOccupied()) break; 
-            tile.flag();
-            tileCounter++;
-        }
+        int direction = blackOnBottom ? (piece.getTeam() == TeamEnum.BLACK ? 1 : -1)
+                                      : (piece.getTeam() == TeamEnum.BLACK ? -1 : 1);
 
-        return (tileCounter > 0);
+        // Evaluate possible movement tiles
+        return (flagDiagonalRight(x, y, direction, length) +
+                flagVertical(y, x, direction, length) +
+                flagDiagonalLeft(x, y, direction, length)) > 0;
     }
-    
-    /* Removes the flagged state from all tiles */
+
+    /**
+     * Unflags all tiles in the map, resetting their status to unflagged.
+     */
     public void unflagTiles() {
         for (Tile[] tiles : tileMatrix) {
             for (Tile tile : tiles) {
@@ -245,53 +270,90 @@ public class Map implements Serializable {
         }
     }
 
-    /* Checks if a piece moved to the enemy's base line */
+    /**
+     * Checks whether a piece has reached the enemy's base line to determine if the turn is over.
+     *
+     * @return True if a piece has reached the enemy's base line, false otherwise.
+     */
     public boolean isTurnOver() {
         Piece investigatedPiece;
         TeamEnum team;
+
+        // Check the top row
         for (int i = 0; i < tileMatrix.length; i++) {
             investigatedPiece = tileMatrix[0][i].getPiece();
             if (investigatedPiece == null) continue;
             team = investigatedPiece.getTeam();
-            if (blackOnBottom && team == TeamEnum.BLACK || !blackOnBottom && team == TeamEnum.WHITE) {
-                investigatedPiece.increaseDragonTeeth();
-                if (!isBotPlaying) blackOnBottom = team != TeamEnum.BLACK;
-                return true;
-            }
-            
-            investigatedPiece = tileMatrix[7][i].getPiece();
-            if (investigatedPiece == null) continue;
-            team = investigatedPiece.getTeam();
-            if (blackOnBottom && team == TeamEnum.WHITE || !blackOnBottom && team == TeamEnum.BLACK) {
+
+            if ((blackOnBottom && team == TeamEnum.BLACK) || (!blackOnBottom && team == TeamEnum.WHITE)) {
                 investigatedPiece.increaseDragonTeeth();
                 if (!isBotPlaying) blackOnBottom = team != TeamEnum.BLACK;
                 return true;
             }
         }
+
+        // Check the bottom row
+        for (int i = 0; i < tileMatrix.length; i++) {
+            investigatedPiece = tileMatrix[7][i].getPiece();
+            if (investigatedPiece == null) continue;
+            team = investigatedPiece.getTeam();
+
+            if ((blackOnBottom && team == TeamEnum.WHITE) || (!blackOnBottom && team == TeamEnum.BLACK)) {
+                investigatedPiece.increaseDragonTeeth();
+                if (!isBotPlaying) blackOnBottom = team != TeamEnum.BLACK;
+                return true;
+            }
+        }
+
         return false;
     }
 
-    /* Returns the tile from the provided coordinate */
+    /**
+     * Retrieves the tile at the specified coordinate.
+     *
+     * @param coord The coordinate of the tile to retrieve.
+     * @return The tile located at the specified coordinate.
+     */
     private Tile getTile(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()];
     }
 
-    /* Returns the piece from the provided coordinate */
+    /**
+     * Retrieves the piece at the specified coordinate.
+     *
+     * @param coord The coordinate of the piece to retrieve.
+     * @return The piece located at the specified coordinate, or null if no piece is present.
+     */
     private Piece getPiece(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece();
     }
 
-    /* Returns the amount of teeth the piece has at the provided coordinate */
+    /**
+     * Gets the number of dragon teeth collected by the piece at the specified coordinate.
+     *
+     * @param coord The coordinate of the piece whose dragon teeth count is to be retrieved.
+     * @return The number of dragon teeth collected by the piece.
+     */
     public int getDragonTeeth(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece().getDragonTeeth();
     }
 
-    /* Returns the value a piece can move at the provided coordinate */
+    /**
+     * Gets the movement length of the piece at the specified coordinate.
+     *
+     * @param coord The coordinate of the piece whose movement length is to be retrieved.
+     * @return The movement length of the piece.
+     */
     public int getMovementLength(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getPiece().getMovementLength();
     }
 
-    /* Returns the team of the piece at the provided coordinate */
+    /**
+     * Gets the team of the piece at the specified coordinate.
+     *
+     * @param coord The coordinate of the piece whose team is to be retrieved.
+     * @return The team of the piece, or TeamEnum.NONE if no piece is present.
+     */
     public TeamEnum getTeam(Coordinate coord) {
         Piece piece = tileMatrix[coord.getY()][coord.getX()].getPiece();
         if (piece == null) {
@@ -300,8 +362,81 @@ public class Map implements Serializable {
         return piece.getTeam();
     }
 
-    /* Returns the color of the tile at the provided coordinate */
-    public  ColorEnum getTileColor(Coordinate coord) {
+    /**
+     * Gets the color of the tile at the specified coordinate.
+     *
+     * @param coord The coordinate of the tile whose color is to be retrieved.
+     * @return The color of the tile.
+     */
+    public ColorEnum getTileColor(Coordinate coord) {
         return tileMatrix[coord.getY()][coord.getX()].getColor();
+    }
+
+    /**
+     * Flags the diagonal right movement from a given starting coordinate, marking all valid tiles.
+     *
+     * @param x         The starting x-coordinate.
+     * @param y         The starting y-coordinate.
+     * @param direction The direction multiplier for movement (-1 or 1).
+     * @param length    The maximum movement length for the piece.
+     * @return The number of valid tiles flagged.
+     */
+    private int flagDiagonalRight(int x, int y, int direction, int length) {
+        int tileCounter = 0;
+
+        for (int i = 1; x + i * direction < 8 && y - i * direction < 8 &&
+                x + i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x + direction * i];
+            if (tile.isOccupied()) break;
+            tile.flag();
+            tileCounter++;
+        }
+
+        return tileCounter;
+    }
+
+    /**
+     * Flags the vertical movement from a given starting coordinate, marking all valid tiles.
+     *
+     * @param y         The starting y-coordinate.
+     * @param x         The x-coordinate of the starting tile.
+     * @param direction The direction multiplier for movement (-1 or 1).
+     * @param length    The maximum movement length for the piece.
+     * @return The number of valid tiles flagged.
+     */
+    private int flagVertical(int y, int x, int direction, int length) {
+        int tileCounter = 0;
+
+        for (int i = 1; y - i * direction < 8 && y - i * direction >= 0 && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x];
+            if (tile.isOccupied()) break;
+            tile.flag();
+            tileCounter++;
+        }
+
+        return tileCounter;
+    }
+
+    /**
+     * Flags the diagonal left movement from a given starting coordinate, marking all valid tiles.
+     *
+     * @param x         The starting x-coordinate.
+     * @param y         The starting y-coordinate.
+     * @param direction The direction multiplier for movement (-1 or 1).
+     * @param length    The maximum movement length for the piece.
+     * @return The number of valid tiles flagged.
+     */
+    private int flagDiagonalLeft(int x, int y, int direction, int length) {
+        int tileCounter = 0;
+
+        for (int i = 1; x - i * direction < 8 && y - i * direction < 8 &&
+                x - i * direction >= 0 && y - i * direction >= 0 && i <= length; i++) {
+            Tile tile = tileMatrix[y - direction * i][x - direction * i];
+            if (tile.isOccupied()) break;
+            tile.flag();
+            tileCounter++;
+        }
+
+        return tileCounter;
     }
 }
