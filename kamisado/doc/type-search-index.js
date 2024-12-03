@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"com.feke.kamisado","l":"Board"},{"p":"com.feke.kamisado","l":"Bot"},{"p":"com.feke.kamisado","l":"Controller"},{"p":"com.feke.kamisado","l":"Map"},{"p":"com.feke.kamisado","l":"Piece"},{"p":"com.feke.kamisado","l":"Position"},{"p":"com.feke.kamisado","l":"View"}];updateSearchResults();

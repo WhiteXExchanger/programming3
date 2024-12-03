@@ -1,0 +1,130 @@
+@startuml
+
+class Piece {
+  - ColorEnum color
+  - TeamEnum team
+  - int dragonTeeth
+
+  + Piece(team: TeamEnum, color: ColorEnum)
+  + Piece(other: Piece)
+  + int getMovementLength()
+  + int getDragonTeeth()
+  + void increaseDragonTeeth()
+  + TeamEnum getTeam()
+  + ColorEnum getColor()
+}
+
+class Position {
+  - Map simulatedMap
+  - Coordinate coordinate
+
+  + Position(matrix: Tile[][], coordinate: Coordinate)
+  + Position(matrix: Tile[][], coord1: Coordinate, coord2: Coordinate)
+  + Coordinate getCoordinate()
+  + int getEvaluation()
+  + boolean isEndOfGame()
+  + ArrayList<Coordinate> getValidMovements(coord: Coordinate)
+  + ArrayList<Position> getPossiblePositions()
+}
+
+class Tile {
+  - ColorEnum color
+  - boolean isOccupied
+  - TileEnum tileEnum
+  - Piece piece
+
+  + Tile(color: ColorEnum)
+  + Tile(tile: Tile)
+  + void setPiece(piece: Piece)
+  + void clearPiece()
+  + Piece getPiece()
+  + boolean isOccupied()
+  + void select()
+  + void flag()
+  + void unflag()
+  + boolean isSelected()
+  + boolean isFlagged()
+}
+
+class View {
+  - Controller controller
+  - JPanel panel
+  + View(controller: Controller)
+  + void renderGame(tiles: Tile[][])
+  + void renderMenu()
+  + void renderGameOptions(isBotPlaying: boolean)
+  + void renderTiles(tiles: Tile[][])
+  + void renderTile(tile: Tile, x: int, y: int)
+}
+
+class Board {
+  - Map map
+  - TeamEnum currentPlayer
+  - Coordinate activeCoordinate
+  - boolean isBotPlaying
+  - boolean isFirstMove
+  - int[] points
+
+  + Board(isBotPlaying: boolean)
+  + void interact(coord: Coordinate)
+  + void useBot(coord: Coordinate)
+  + void endOfTurn(coord: Coordinate)
+  + int[] getPoints()
+  + Tile[][] getMap()
+}
+
+class Bot {
+  + Coordinate getMovement(coord: Coordinate, matrix: Tile[][])
+  + int minimax(position: Position, depth: int, alpha: int, beta: int, maximizingPlayer: boolean)
+}
+
+class Controller {
+  - Board board
+  - View view
+  - int pointsNeeded
+
+  + Controller()
+  + void touchTile(to: Coordinate)
+  + void save()
+  + void load()
+  + void remove()
+  + void startGame(isNormalMode: boolean, isBotPlaying: boolean)
+  + boolean isGameOver()
+}
+
+class Coordinate {
+  - int x
+  - int y
+
+  + Coordinate(x: int, y: int)
+  + int getX()
+  + int getY()
+}
+
+class Map {
+  - Tile[][] tileMatrix
+  - boolean blackOnBottom
+  - boolean isBotPlaying
+
+  + Map(isBotPlaying: boolean)
+  + void placeTiles()
+  + void placePieces()
+  + Coordinate getSelected()
+  + boolean movePiece(currCoord: Coordinate, nextCoord: Coordinate)
+  + void resetMap()
+  + boolean selectTile(coord: Coordinate)
+}
+
+View --> Controller
+Controller --> Board
+Controller --> View
+Board --> Map
+Board --> Bot
+Map --> Tile
+Tile --> Piece
+Position --> Map
+Position --> Coordinate
+Bot --> Position
+Map --> Coordinate
+
+@enduml
