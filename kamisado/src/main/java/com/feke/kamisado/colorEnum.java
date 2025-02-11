@@ -1,5 +1,8 @@
 package com.feke.kamisado;
 
+/**
+ * Represents the different colors of the tiles and pieces used in the game.
+ */
 enum ColorEnum {
-    WHITE, ORANGE, RED, GREEN, PINK, YELLOW, BLUE, PURPLE, BROWN;
+    NONE, ORANGE, RED, GREEN, PINK, YELLOW, BLUE, PURPLE, BROWN;
 }

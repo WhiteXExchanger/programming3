@@ -6,19 +6,31 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/**
+ * The Controller class manages the flow of the game, including user
+ * interactions, saving/loading the game, and managing the Board and View.
+ */
 public class Controller {
 
     Board board;
     View view;
     int pointsNeeded = 1;
 
+    /**
+     * Constructs a Controller and initializes the game UI.
+     * Attempts to load a saved game state.
+     */
     Controller() {
         view = new View(this);
         view.renderMenu();
-        load(); // Trying to load save, on success it gets rendered
+        load();
     }
 
-    // Manages if the game should be played or exited
+    /**
+     * Handles user interaction with a tile.
+     *
+     * @param to the coordinate of the tile being touched.
+     */
     void touchTile(Coordinate to) {
         board.interact(to);
         updateGame();
@@ -28,11 +40,13 @@ public class Controller {
         }
     }
 
-    // Only saves if a game already has begun
+    /**
+     * Saves the current game state to a file.
+     */
     public void save() {
         if (board == null) return;
         try {
-            FileOutputStream fileOut = new FileOutputStream("board.save");
+            FileOutputStream fileOut = new FileOutputStream("game.save");
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             System.out.println("Saving");
             out.writeObject(board);
@@ -44,14 +58,15 @@ public class Controller {
         }
     }
 
-    // Puts the board as an object, and pointsNeeded as an int into "board.save" file.
-    // AKA saving the game state
+    /**
+     * Loads a saved game state from a file, if it exists.
+     */
     private void load() {
         try {
-            FileInputStream fileIn = new FileInputStream("board.save");
+            FileInputStream fileIn = new FileInputStream("game.save");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             board = (Board) in.readObject();
-            pointsNeeded = (int) in.readInt();
+            pointsNeeded = in.readInt();
             in.close();
         } catch (Exception e) {
             System.out.println("Save file wasn't found. Loading normally");
@@ -61,33 +76,46 @@ public class Controller {
         }
     }
 
-    // Removes the save file, it should run only if the game have ended
+    /**
+     * Deletes the saved game file. Used when the game ends.
+     */
     private void remove() {
         try {
-            File fileToRemove = new File("board.save");
+            File fileToRemove = new File("game.save");
             fileToRemove.delete();
         } catch (Exception e) {
             System.out.println("Save file couldn't be removed.");
         }
     }
-    
-    // Checks if a player enough points to win, if so returns with true, otherwise false
-    private boolean isGameOver() {
-        int[] points = board.getPoints();
-        boolean gameState = (points[0] >= pointsNeeded || points[1] >= pointsNeeded);
-        if (gameState) board = null;
-        return gameState;
-    }
-    
-    // Board gets created, pointsNeeded gets assigned, calls for game rendering
+
+    /**
+     * Starts a new game with the specified mode and bot-playing option.
+     *
+     * @param isNormalMode whether the game is in normal mode (15 points to win).
+     * @param isBotPlaying whether a bot will play.
+     */
     public void startGame(boolean isNormalMode, boolean isBotPlaying) {
         board = new Board(isBotPlaying);
         pointsNeeded = isNormalMode ? 15 : 1;
         updateGame();
     }
 
-    // Calls for game rendering for refreshing the game state
+    /**
+     * Refreshes the game state and updates the UI.
+     */
     private void updateGame() {
         view.renderGame(board.getMap());
+    }
+
+    /**
+     * Checks if the game is over based on points.
+     *
+     * @return true if a player has reached the required points, false otherwise.
+     */
+    private boolean isGameOver() {
+        int[] points = board.getPoints();
+        boolean gameState = (points[0] >= pointsNeeded || points[1] >= pointsNeeded);
+        if (gameState) board = null;
+        return gameState;
     }
 }

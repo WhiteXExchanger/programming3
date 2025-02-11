@@ -1,1 +1,15 @@
+com\feke\kamisado\Main.class
+com\feke\kamisado\Piece.class
+com\feke\kamisado\Position.class
+com\feke\kamisado\View$1.class
+com\feke\kamisado\Bot.class
+com\feke\kamisado\TileEnum.class
+com\feke\kamisado\Map.class
+com\feke\kamisado\View.class
+com\feke\kamisado\Controller.class
+com\feke\kamisado\ColorEnum.class
+com\feke\kamisado\TeamEnum.class
 com\feke\kamisado\View$2.class
+com\feke\kamisado\Board.class
+com\feke\kamisado\Coordinate.class
+com\feke\kamisado\Tile.class
